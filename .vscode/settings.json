@@ -1,0 +1,5 @@
+{
+  "prettier.semi": false,
+  "typescriptHero.imports.insertSemicolons": false,
+  "autoimport.useSemiColon": false
+}
