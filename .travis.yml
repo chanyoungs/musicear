@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+  - "12"
+cache: yarn
+
+install:
+  - yarn install
+  - yarn global add firebase-tools
+
+script:
+  - CI=false yarn run build
+
+after_success:
+  - firebase deploy --token $FIREBASE_TOKEN
