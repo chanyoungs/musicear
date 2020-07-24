@@ -70,7 +70,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
     audioContext.resume().then(() => {
       if (instrument) {
         const audioNode = instrument.play(
-          midiNumber,
+          midiNumber.toString(),
           audioContext.currentTime,
           { duration: 1 }
         )
