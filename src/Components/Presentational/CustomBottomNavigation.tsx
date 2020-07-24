@@ -6,7 +6,7 @@ import React from 'react'
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     bottomNavigation: {
-      position: "fixed",
+      position: "sticky",
       bottom: 0,
       width: "100%",
     },

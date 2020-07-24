@@ -32,7 +32,8 @@ export interface IPPianoContainer {
   setPlay: (play: Play) => void
   transpose: number
   degreeToMidinumber: (degree: number) => number
-  appendPlayedNote: (midiNumber: number) => void
+  midinumberToNoteName: (midinumber: number) => string
+  appendPlayedNote: (midinumber: number) => void
 }
 
 export const PianoContainer: FC<IPPianoContainer> = ({
@@ -41,6 +42,7 @@ export const PianoContainer: FC<IPPianoContainer> = ({
   setPlay,
   transpose,
   degreeToMidinumber,
+  midinumberToNoteName,
   appendPlayedNote,
 }) => {
   const classes = useStyles()
@@ -70,7 +72,7 @@ export const PianoContainer: FC<IPPianoContainer> = ({
   const keyboardShortcuts: { key: string; midiNumber: number }[] = []
   for (let i = 1; i <= 8; i++) {
     keyboardShortcuts.push({
-      key: i.toString(),
+      key: midinumberToNoteName(degreeToMidinumber(i)),
       midiNumber: degreeToMidinumber(i),
     })
   }
@@ -97,7 +99,6 @@ export const PianoContainer: FC<IPPianoContainer> = ({
               }
               onPlayNoteInput={(midiNumber: number) => {
                 appendPlayedNote(midiNumber)
-                console.log(midiNumber, "play")
               }}
             />
             <SoundPlayer

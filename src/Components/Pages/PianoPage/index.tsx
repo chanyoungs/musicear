@@ -6,40 +6,67 @@ import Button from '@material-ui/core/Button'
 import ButtonGroup from '@material-ui/core/ButtonGroup'
 import Checkbox from '@material-ui/core/Checkbox'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Grid from '@material-ui/core/Grid'
+import FormGroup from '@material-ui/core/FormGroup'
+import IconButton from '@material-ui/core/IconButton'
+import Paper from '@material-ui/core/Paper'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import AddIcon from '@material-ui/icons/Add'
 import CheckIcon from '@material-ui/icons/Check'
 import HelpIcon from '@material-ui/icons/Help'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow'
+import RefreshIcon from '@material-ui/icons/Refresh'
 import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
 import React, { FC, Fragment, useState } from 'react'
 
 import { Melody, Note, Play } from '../../../@types/types'
+import { getRandomInt, noteNames, scaleIntervals } from '../../../utils'
+import { CustomAppBar } from '../../Presentational/CustomAppBar'
 import { CustomBottomNavigation } from '../../Presentational/CustomBottomNavigation'
+import { CustomSnackbar } from '../../Presentational/CustomSnackbar'
+import { SettingItemPaper } from '../../Presentational/SettingItemPaper'
+import { SettingsDialog } from '../../Presentational/SettingsDialog'
 import { PianoContainer } from './PianoContainer'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      // color: theme.palette.common.white,
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "spaceBetween",
+      width: "100%",
     },
-    gridContainer: {
-      paddingLeft: theme.spacing(2),
-      paddingRight: theme.spacing(2),
+    container: {
+      padding: theme.spacing(2),
+      width: "100%",
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+    },
+    filler: {
+      padding: 0,
+      flex: 1,
+    },
+    settingsItems: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    },
+    displayNotes: {
+      width: "100%",
+      minHeight: theme.spacing(6),
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
     },
   })
 )
 
-const getRandomInt = (min: number, max: number) =>
-  Math.floor(Math.random() * (max - min + 1) + min)
-
 const rootNote = 48
-
-const scaleIntervals = [0, 2, 4, 5, 7, 9, 11]
 
 const degreeToMidinumber = (scaleDegree: number) => {
   scaleDegree--
@@ -58,8 +85,13 @@ const reference = [
   [degreeToMidinumber(1)],
 ]
 
+const referenceDuration = 500
+
 export const PianoPage: FC = () => {
   const classes = useStyles()
+  const [openSettings, setOpenSettings] = useState(false)
+  const [noteDisplayDegree, setNoteDisplayDegree] = useState(true)
+  const [noteDisplaySolfege, setNoteDisplaySolfege] = useState(false)
   const [play, setPlay] = useState<Play>("stop")
   const [melodyLength, setMelodyLength] = useState(1)
   const [noteDuration, setNoteDuration] = useState(1000)
@@ -76,12 +108,17 @@ export const PianoPage: FC = () => {
   }
 
   // Melody
-  const makeMelody = (notes: Note[], callback?: () => void) => {
+  const makeMelody = (props: {
+    notes: Note[]
+    callback?: () => void
+    duration?: number
+  }) => {
+    const { notes, callback, duration = noteDuration } = props
     const melody: Melody = { notes: [], durations: [], callback }
     notes.forEach((note) => {
       melody.notes.push(note)
       melody.notes.push([])
-      melody.durations.push(noteDuration)
+      melody.durations.push(duration)
       melody.durations.push(0)
     })
     return melody
@@ -93,7 +130,7 @@ export const PianoPage: FC = () => {
     for (let i = 0; i < mLength; i++) {
       notes.push([degreeToMidinumber(getRandomInt(0, 7))])
     }
-    return makeMelody(notes)
+    return makeMelody({ notes })
   }
   const [melody, setMelody] = useState<Melody>(randomMelody())
 
@@ -113,9 +150,13 @@ export const PianoPage: FC = () => {
 
   const playMelody = () => setPlay(play === "stop" ? "sound" : "stop")
   const nextMelody = () => {
+    setPlayedNotes([])
     if (!keyFixed) {
       setTranspose(getRandomInt(0, 11))
-      const referenceMelody = makeMelody(reference)
+      const referenceMelody = makeMelody({
+        notes: reference,
+        duration: referenceDuration,
+      })
       const newRandomMelody = randomMelody()
       const tempMelody: Melody = {
         notes: [...referenceMelody.notes, [], ...newRandomMelody.notes],
@@ -138,173 +179,256 @@ export const PianoPage: FC = () => {
 
   const playReference = () => {
     setMelody((prevSong) =>
-      makeMelody(reference, () => {
-        setMelody(prevSong)
+      makeMelody({
+        notes: reference,
+        callback: () => {
+          setMelody(prevSong)
+        },
+        duration: referenceDuration,
       })
     )
     setPlay("sound")
   }
 
-  const playAnswer = () => setPlay("piano")
+  // Check Answer
+  type Snackbar = {
+    open: boolean
+    severity: "error" | "success"
+    message: string
+  }
+  const defaultSnackbar: Snackbar = {
+    open: false,
+    severity: "error",
+    message: "",
+  }
+  const [snackbar, setSnackbar] = useState<Snackbar>(defaultSnackbar)
+  const handleCloseSnackbar = () => {
+    setSnackbar((prevSnackbar) => ({ ...prevSnackbar, open: false }))
+  }
 
-  // Key names, midinumbers, scale degrees
+  const checkAndPlayAnswer = () => {
+    setPlay("piano")
+    if (playedNotes.length * 2 < melody.notes.length) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Not enough notes played!",
+      })
+    } else if (playedNotes.length * 2 > melody.notes.length) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Too many notes played!",
+      })
+    } else {
+      for (let i = 0; i < playedNotes.length; i++) {
+        if (playedNotes[i] !== melody.notes[i * 2][0]) {
+          setSnackbar({ open: true, severity: "error", message: "Incorrect!" })
+          return
+        }
+      }
+      setSnackbar({ open: true, severity: "success", message: "Correct!" })
+    }
+  }
 
+  // Key names
   const getKeyName = () => {
-    const keyNames = ["C", "C#", "D", "D#", "E", "F", "G", "G#", "A", "A#", "B"]
-    const keyName = keyNames[(rootNote + transpose - 4) % 11]
+    const keyName = noteNames.letter[(rootNote + transpose - 4) % 11]
     const octave = Math.floor((rootNote + transpose - 4) / 11)
     return { keyName, octave }
   }
 
-  const midinumberToDegree = (midiNumber: number) => {
+  const midinumberToNoteName = (midiNumber: number) => {
+    if (!noteDisplayDegree && !noteDisplaySolfege) return ""
+
     const relativeMidinumber = midiNumber - rootNote
     const interval = relativeMidinumber % 12
     const octave = Math.floor(relativeMidinumber / 12)
-    const scaleDegrees: [number, string][] = [
-      [1, ""],
-      [1, "#"],
-      [2, ""],
-      [2, "#"],
-      [3, ""],
-      [4, ""],
-      [4, "#"],
-      [5, ""],
-      [5, "#"],
-      [6, ""],
-      [6, "#"],
-      [7, ""],
-      [7, ""],
-    ]
-    const scaleDegree = scaleDegrees[interval]
-    return (scaleDegree[0] + octave * 7).toString() + scaleDegree[1]
+    const scaleDegree = noteNames.degree[interval]
+    const nameDegree = (scaleDegree[0] + octave * 7).toString() + scaleDegree[1]
+    if (noteDisplayDegree && !noteDisplaySolfege) return nameDegree
+
+    const nameSolfege = noteNames.solfege[interval]
+    if (!noteDisplayDegree && noteDisplaySolfege) return nameSolfege
+
+    return nameDegree + " " + nameSolfege
   }
 
   return (
     <div className={classes.root}>
-      <Grid
-        container
-        justify="center"
-        alignItems="center"
-        spacing={2}
-        className={classes.gridContainer}
-      >
-        <Grid item xs={12}>
-          <PianoContainer
-            melody={melody}
-            play={play}
-            setPlay={setPlay}
-            transpose={transpose}
-            degreeToMidinumber={degreeToMidinumber}
-            appendPlayedNote={appendPlayedNote}
+      <CustomSnackbar
+        open={snackbar.open}
+        severity={snackbar.severity}
+        message={snackbar.message}
+        onClose={handleCloseSnackbar}
+      />
+      <SettingsDialog open={openSettings} setOpen={setOpenSettings}>
+        <div className={classes.settingsItems}>
+          <SettingItemPaper
+            title="Note display mode"
+            content={
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={noteDisplayDegree}
+                      onChange={(event) => {
+                        setNoteDisplayDegree(event.target.checked)
+                      }}
+                      name="checkedA"
+                    />
+                  }
+                  label="Degree"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={noteDisplaySolfege}
+                      onChange={(event) => {
+                        setNoteDisplaySolfege(event.target.checked)
+                      }}
+                      name="checkedA"
+                    />
+                  }
+                  label="Solfege"
+                />
+              </FormGroup>
+            }
           />
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="h6" align="center">
-            {playedNotes &&
-              playedNotes.map((note) => midinumberToDegree(note)).join(" ⮕ ")}
-          </Typography>
-        </Grid>
-
-        <Grid item>
-          <Typography align="center">{`Melody Length: ${melodyLength}`}</Typography>
-        </Grid>
-        <Grid item>
-          <ButtonGroup variant="contained" color="primary">
-            <Button
-              onClick={() => {
-                const mLength = melodyLength + 1
-                setMelodyLength(mLength)
-                setMelody(randomMelody(mLength))
-              }}
-            >
-              <AddIcon />
-            </Button>
-            <Button
-              disabled={melodyLength < 2}
-              onClick={() => {
-                if (melodyLength > 1) {
-                  const mLength = melodyLength - 1
-                  setMelodyLength(mLength)
-                  setMelody(randomMelody(mLength))
-                }
-              }}
-            >
-              <RemoveIcon />
-            </Button>
-          </ButtonGroup>
-        </Grid>
-        <Grid item xs={12} />
-        <Grid item>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={keyFixed}
+          <SettingItemPaper
+            title={`Melody Length: ${melodyLength}`}
+            content={
+              <ButtonGroup variant="contained" color="primary">
+                <Button
+                  onClick={() => {
+                    const mLength = melodyLength + 1
+                    setMelodyLength(mLength)
+                    setMelody(randomMelody(mLength))
+                  }}
+                >
+                  <AddIcon />
+                </Button>
+                <Button
+                  disabled={melodyLength < 2}
+                  onClick={() => {
+                    if (melodyLength > 1) {
+                      const mLength = melodyLength - 1
+                      setMelodyLength(mLength)
+                      setMelody(randomMelody(mLength))
+                    }
+                  }}
+                >
+                  <RemoveIcon />
+                </Button>
+              </ButtonGroup>
+            }
+          />
+          <SettingItemPaper
+            title={`Key: ${getKeyName().keyName} Octave: ${
+              getKeyName().octave
+            }`}
+            content={
+              <Fragment>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={keyFixed}
+                      onChange={(event) => {
+                        setKeyFixed(event.target.checked)
+                      }}
+                    />
+                  }
+                  label="Fix key"
+                />
+                <ButtonGroup variant="contained" color="primary">
+                  <Button
+                    disabled={!keyFixed}
+                    onClick={() => {
+                      setTranspose(transpose + 1)
+                      setMelody(randomMelody())
+                    }}
+                  >
+                    <AddIcon />
+                  </Button>
+                  <Button
+                    disabled={!keyFixed}
+                    onClick={() => {
+                      setTranspose(transpose - 1)
+                      setMelody(randomMelody())
+                    }}
+                  >
+                    <RemoveIcon />
+                  </Button>
+                  <Button
+                    disabled={!keyFixed}
+                    onClick={() => {
+                      setTranspose(getRandomInt(0, 11))
+                    }}
+                  >
+                    ?
+                  </Button>
+                </ButtonGroup>
+              </Fragment>
+            }
+          />
+          <SettingItemPaper
+            title="Note duration(ms)"
+            content={
+              <TextField
+                size="small"
+                variant="outlined"
+                value={noteDurationTemp}
                 onChange={(event) => {
-                  setKeyFixed(event.target.checked)
+                  const s = event.target.value
+                  setNoteDurationTemp(s)
+                  const n = parseInt(s)
+                  if (!isNaN(n) && n > 0) {
+                    setNoteDuration(n)
+                    updateMelodyDuration(n)
+                  }
                 }}
+                error={noteDurationInputError()}
+                helperText={
+                  noteDurationInputError() && "Must be a positive integer!"
+                }
               />
             }
-            label="Fix key"
           />
-        </Grid>
-        <Grid item>
-          <Typography align="center">
-            {`Key: ${getKeyName().keyName} Octave: ${getKeyName().octave}`}
+        </div>
+      </SettingsDialog>
+      <CustomAppBar
+        onClickSettings={() => {
+          setOpenSettings(true)
+        }}
+      />
+      <div className={classes.container}>
+        <Paper className={classes.displayNotes}>
+          <Typography variant="h6" align="center">
+            {playedNotes &&
+              (noteDisplayDegree || noteDisplaySolfege) &&
+              playedNotes.map((note) => midinumberToNoteName(note)).join(" ⮕ ")}
           </Typography>
-        </Grid>
-        <Grid item>
-          <ButtonGroup variant="contained" color="primary">
-            <Button
-              disabled={!keyFixed}
-              onClick={() => {
-                setTranspose(transpose + 1)
-                setMelody(randomMelody())
-              }}
-            >
-              <AddIcon />
-            </Button>
-            <Button
-              disabled={!keyFixed}
-              onClick={() => {
-                setTranspose(transpose - 1)
-                setMelody(randomMelody())
-              }}
-            >
-              <RemoveIcon />
-            </Button>
-            <Button
-              disabled={!keyFixed}
-              onClick={() => {
-                setTranspose(getRandomInt(0, 11))
-              }}
-            >
-              RANDOM
-            </Button>
-          </ButtonGroup>
-        </Grid>
-        <Grid item xs={12} />
-        <Grid item>
-          <Typography align="center">Note duration in milliseconds</Typography>
-        </Grid>
-        <Grid item>
-          <TextField
-            value={noteDurationTemp}
-            onChange={(event) => {
-              const s = event.target.value
-              setNoteDurationTemp(s)
-              const n = parseInt(s)
-              if (!isNaN(n) && n > 0) {
-                setNoteDuration(n)
-                updateMelodyDuration(n)
-              }
+          <IconButton
+            disabled={playedNotes.length === 0}
+            onClick={() => {
+              setPlayedNotes([])
             }}
-            error={noteDurationInputError()}
-            helperText={
-              noteDurationInputError() && "Must be a positive integer!"
-            }
-          />
-        </Grid>
-      </Grid>
+          >
+            <RefreshIcon />
+          </IconButton>
+        </Paper>
+      </div>
+      <div className={classes.container}>
+        <PianoContainer
+          melody={melody}
+          play={play}
+          setPlay={setPlay}
+          transpose={transpose}
+          degreeToMidinumber={degreeToMidinumber}
+          midinumberToNoteName={midinumberToNoteName}
+          appendPlayedNote={appendPlayedNote}
+        />
+      </div>
       <CustomBottomNavigation
         bottomNavigationActions={[
           {
@@ -325,7 +449,7 @@ export const PianoPage: FC = () => {
           {
             label: "Answer",
             icon: <CheckIcon />,
-            onClick: playAnswer,
+            onClick: checkAndPlayAnswer,
           },
         ]}
       />
