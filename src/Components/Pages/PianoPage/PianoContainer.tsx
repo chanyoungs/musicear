@@ -7,6 +7,7 @@ import useDimensions from 'react-cool-dimensions'
 import { KeyboardShortcuts, MidiNumbers, Piano } from 'react-piano'
 
 import { Melody, Play } from '../../../@types/types'
+import { LoadingBackdrop } from '../../Presentational/LoadingBackdrop'
 import { SoundfontProvider } from '../../SoundfontProvider'
 import { SoundPlayer } from './SoundPlayer'
 
@@ -30,7 +31,8 @@ export interface IPPianoContainer {
   play: Play
   setPlay: (play: Play) => void
   transpose: number
-  scale: number[]
+  degreeToMidinumber: (degree: number) => number
+  appendPlayedNote: (midiNumber: number) => void
 }
 
 export const PianoContainer: FC<IPPianoContainer> = ({
@@ -38,7 +40,8 @@ export const PianoContainer: FC<IPPianoContainer> = ({
   play,
   setPlay,
   transpose,
-  scale,
+  degreeToMidinumber,
+  appendPlayedNote,
 }) => {
   const classes = useStyles()
   const { ref, width } = useDimensions<HTMLDivElement>()
@@ -64,10 +67,13 @@ export const PianoContainer: FC<IPPianoContainer> = ({
     }
   }, [play, melodyIndex])
 
-  const keyboardShortcuts = scale.map((midiNumber, i) => ({
-    key: (i + 1).toString(),
-    midiNumber,
-  }))
+  const keyboardShortcuts: { key: string; midiNumber: number }[] = []
+  for (let i = 1; i <= 8; i++) {
+    keyboardShortcuts.push({
+      key: i.toString(),
+      midiNumber: degreeToMidinumber(i),
+    })
+  }
 
   return (
     <div ref={ref}>
@@ -78,6 +84,7 @@ export const PianoContainer: FC<IPPianoContainer> = ({
         transpose={transpose}
         render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
           <Fragment>
+            <LoadingBackdrop open={isLoading} />
             <Piano
               noteRange={noteRange}
               width={width}
@@ -89,13 +96,8 @@ export const PianoContainer: FC<IPPianoContainer> = ({
                 play === "piano" ? melody.notes[melodyIndex] : undefined
               }
               onPlayNoteInput={(midiNumber: number) => {
+                appendPlayedNote(midiNumber)
                 console.log(midiNumber, "play")
-              }}
-              onStopNoteInput={(
-                midiNumber: number,
-                { prevActiveNotes }: any
-              ) => {
-                console.log(midiNumber, "stop")
               }}
             />
             <SoundPlayer

@@ -39,23 +39,23 @@ const getRandomInt = (min: number, max: number) =>
 
 const rootNote = 48
 
-const scale = [
-  rootNote,
-  rootNote + 2,
-  rootNote + 4,
-  rootNote + 5,
-  rootNote + 7,
-  rootNote + 9,
-  rootNote + 11,
-  rootNote + 12,
-]
+const scaleIntervals = [0, 2, 4, 5, 7, 9, 11]
+
+const degreeToMidinumber = (scaleDegree: number) => {
+  scaleDegree--
+  return (
+    rootNote +
+    Math.floor(scaleDegree / 7) * 12 +
+    scaleIntervals[scaleDegree % 7]
+  )
+}
 
 const reference = [
-  [scale[2] - 12, scale[4] - 12, scale[0]],
-  [scale[5] - 12, scale[0], scale[3]],
-  [scale[6] - 12, scale[1], scale[4]],
-  [scale[2] - 12, scale[4] - 12, scale[0]],
-  [scale[0]],
+  [degreeToMidinumber(3), degreeToMidinumber(5), degreeToMidinumber(8)],
+  [degreeToMidinumber(4), degreeToMidinumber(6), degreeToMidinumber(8)],
+  [degreeToMidinumber(5), degreeToMidinumber(7), degreeToMidinumber(9)],
+  [degreeToMidinumber(3), degreeToMidinumber(5), degreeToMidinumber(8)],
+  [degreeToMidinumber(1)],
 ]
 
 export const PianoPage: FC = () => {
@@ -68,6 +68,12 @@ export const PianoPage: FC = () => {
   )
   const [transpose, setTranspose] = useState(0)
   const [keyFixed, setKeyFixed] = useState(true)
+
+  // Track notes played
+  const [playedNotes, setPlayedNotes] = useState<number[]>([])
+  const appendPlayedNote = (midiNumber: number) => {
+    setPlayedNotes((playedNotes) => [...playedNotes, midiNumber])
+  }
 
   // Melody
   const makeMelody = (notes: Note[], callback?: () => void) => {
@@ -85,13 +91,13 @@ export const PianoPage: FC = () => {
     if (!mLength) mLength = melodyLength
     const notes: Note[] = []
     for (let i = 0; i < mLength; i++) {
-      notes.push([scale[getRandomInt(0, scale.length - 1)]])
+      notes.push([degreeToMidinumber(getRandomInt(0, 7))])
     }
     return makeMelody(notes)
   }
   const [melody, setMelody] = useState<Melody>(randomMelody())
 
-  // Song duration
+  // Melody duration
   const updateMelodyDuration = (duration: number) => {
     melody.durations.forEach((duration, i) => {
       if (duration > 0) melody.durations[i] = duration
@@ -141,11 +147,36 @@ export const PianoPage: FC = () => {
 
   const playAnswer = () => setPlay("piano")
 
+  // Key names, midinumbers, scale degrees
+
   const getKeyName = () => {
     const keyNames = ["C", "C#", "D", "D#", "E", "F", "G", "G#", "A", "A#", "B"]
     const keyName = keyNames[(rootNote + transpose - 4) % 11]
     const octave = Math.floor((rootNote + transpose - 4) / 11)
     return { keyName, octave }
+  }
+
+  const midinumberToDegree = (midiNumber: number) => {
+    const relativeMidinumber = midiNumber - rootNote
+    const interval = relativeMidinumber % 12
+    const octave = Math.floor(relativeMidinumber / 12)
+    const scaleDegrees: [number, string][] = [
+      [1, ""],
+      [1, "#"],
+      [2, ""],
+      [2, "#"],
+      [3, ""],
+      [4, ""],
+      [4, "#"],
+      [5, ""],
+      [5, "#"],
+      [6, ""],
+      [6, "#"],
+      [7, ""],
+      [7, ""],
+    ]
+    const scaleDegree = scaleDegrees[interval]
+    return (scaleDegree[0] + octave * 7).toString() + scaleDegree[1]
   }
 
   return (
@@ -163,8 +194,15 @@ export const PianoPage: FC = () => {
             play={play}
             setPlay={setPlay}
             transpose={transpose}
-            scale={scale}
+            degreeToMidinumber={degreeToMidinumber}
+            appendPlayedNote={appendPlayedNote}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h6" align="center">
+            {playedNotes &&
+              playedNotes.map((note) => midinumberToDegree(note)).join(" ⮕ ")}
+          </Typography>
         </Grid>
 
         <Grid item>

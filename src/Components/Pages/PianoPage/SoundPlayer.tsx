@@ -1,8 +1,7 @@
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
-import React, { FC, Fragment, useEffect, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 
 import { Melody, Play } from '../../../@types/types'
-import { LoadingBackdrop } from '../../Presentational/LoadingBackdrop'
 import { IPRender } from '../../SoundfontProvider'
 
 const useStyles = makeStyles((theme: Theme) => createStyles({}))
@@ -47,5 +46,5 @@ export const SoundPlayer: FC<IPSoundPlayer> = ({
     }
   }, [play, melodyIndex])
 
-  return <LoadingBackdrop open={isLoading} />
+  return null
 }
