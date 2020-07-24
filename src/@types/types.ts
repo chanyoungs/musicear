@@ -1,1 +1,7 @@
-export type Melody = { note: [number] | []; duration: number }[]
+export type Note = number[]
+export interface Melody {
+  notes: Note[]
+  durations: number[]
+  callback?: () => void
+}
+export type Play = "piano" | "sound" | "stop"

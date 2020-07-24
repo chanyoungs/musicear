@@ -1,13 +1,21 @@
-import React from 'react'
+import { createMuiTheme } from '@material-ui/core'
+import { CssBaseline } from '@material-ui/core'
+import { MuiThemeProvider } from '@material-ui/core/styles'
+import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 
 import { App } from './App'
 import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // <React.StrictMode>
+  <Fragment>
+    <CssBaseline />
+    <MuiThemeProvider theme={createMuiTheme()}>
+      <App />
+    </MuiThemeProvider>
+  </Fragment>,
+  // </React.StrictMode>,
   document.getElementById("root")
 )
 

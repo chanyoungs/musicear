@@ -4,14 +4,21 @@ import Soundfont from 'soundfont-player'
 
 const useStyles = makeStyles((theme: Theme) => createStyles({}))
 
+export interface IPRender {
+  isLoading: boolean
+  playNote: (midinumber: number) => void
+  stopNote: (midinumber: number) => void
+  stopAllNotes: () => void
+}
+
 export interface IPSoundfontProvider {
   instrumentName?: Soundfont.InstrumentName
   hostname: string
   format?: "mp3" | "ogg"
   soundfont?: "MusyngKite" | "FluidR3_GM"
-  transpose?: number
+  transpose: number
   audioContext: AudioContext
-  render: (props: any) => ReactElement
+  render: (props: IPRender) => ReactElement
 }
 
 export interface ISSoundfontProvider {}
@@ -24,7 +31,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   format = "mp3",
   soundfont = "MusyngKite",
   instrumentName = "acoustic_grand_piano",
-  transpose = 0,
+  transpose,
   hostname,
   audioContext,
   render,
@@ -58,7 +65,8 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
       })
   }
 
-  const playNote = (midiNumber: string) => {
+  const playNote = (midiNumber: number) => {
+    midiNumber += transpose
     audioContext.resume().then(() => {
       if (instrument) {
         const audioNode = instrument.play(
@@ -76,6 +84,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   }
 
   const stopNote = (midiNumber: number) => {
+    midiNumber += transpose
     audioContext.resume().then(() => {
       if (!activeAudioNodes[midiNumber]) {
         return
@@ -107,6 +116,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
     isLoading: !instrument,
     playNote,
     stopNote: () => {},
+    // stopNote,
     stopAllNotes,
   })
 }
