@@ -1,22 +1,18 @@
 import { createMuiTheme } from '@material-ui/core'
 import { CssBaseline } from '@material-ui/core'
 import { MuiThemeProvider } from '@material-ui/core/styles'
-import React, { Fragment } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { App } from './App'
-import BasicPiano from './Components/test'
 import * as serviceWorker from './serviceWorker'
 import { theme } from './theme'
 
 ReactDOM.render(
-  // <React.StrictMode>
   <MuiThemeProvider theme={createMuiTheme(theme)}>
     <CssBaseline />
     <App />
   </MuiThemeProvider>,
-
-  // </React.StrictMode>,
   document.getElementById("root")
 )
 

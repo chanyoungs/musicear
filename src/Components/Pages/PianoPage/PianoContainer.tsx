@@ -26,6 +26,7 @@ const noteRange = {
 }
 
 export interface IPPianoContainer {
+  touchInput: boolean
   noteDuration: number
   melody: Melody
   play: Play
@@ -37,6 +38,7 @@ export interface IPPianoContainer {
 }
 
 export const PianoContainer: FC<IPPianoContainer> = ({
+  touchInput,
   noteDuration,
   melody,
   play,
@@ -68,8 +70,6 @@ export const PianoContainer: FC<IPPianoContainer> = ({
     }
   }, [play, melodyIndex])
 
-  const [touchInput, setTouchInput] = useState(false)
-
   const keyboardShortcuts: { key: string; midiNumber: number }[] = []
   for (let i = 1; i <= 8; i++) {
     keyboardShortcuts.push({
@@ -88,10 +88,7 @@ export const PianoContainer: FC<IPPianoContainer> = ({
         noteDuration={noteDuration}
         render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
           <Fragment>
-            <LoadingBackdrop
-              isLoading={isLoading}
-              setTouchInput={setTouchInput}
-            />
+            <LoadingBackdrop isLoading={isLoading} />
             <Piano
               useTouchEvents={touchInput}
               noteRange={noteRange}

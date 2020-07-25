@@ -6,8 +6,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import FormGroup from '@material-ui/core/FormGroup'
 import IconButton from '@material-ui/core/IconButton'
 import Paper from '@material-ui/core/Paper'
+import Slider from '@material-ui/core/Slider'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
-import TextField from '@material-ui/core/TextField'
 import AddIcon from '@material-ui/icons/Add'
 import CheckIcon from '@material-ui/icons/Check'
 import HelpIcon from '@material-ui/icons/Help'
@@ -16,7 +16,7 @@ import RefreshIcon from '@material-ui/icons/Refresh'
 import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
-import React, { FC, Fragment, useState } from 'react'
+import React, { FC, Fragment, useEffect, useState } from 'react'
 
 import { Melody, Note, Play } from '../../../@types/types'
 import { getRandomInt, noteNames, scaleIntervals } from '../../../utils'
@@ -44,18 +44,23 @@ const useStyles = makeStyles((theme: Theme) =>
       flexDirection: "column",
       justifyContent: "center",
     },
+    pianoContainer: {
+      margin: theme.spacing(2),
+    },
     filler: {
       padding: 0,
       flex: 1,
     },
     settingsItems: {
+      overflow: "auto",
+      maxHeight: "50vh",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
     },
-    displayNotes: {
+    displayPaper: {
       width: "100%",
-      minHeight: theme.spacing(6),
+      minHeight: theme.spacing(10),
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -86,23 +91,53 @@ const referenceDuration = 500
 
 export const PianoPage: FC = () => {
   const classes = useStyles()
-  const [openSettings, setOpenSettings] = useState(false)
+  const [openSettings, setOpenSettings] = useState(true)
+  const [touchInput, setTouchInput] = useState(false)
   const [noteDisplayDegree, setNoteDisplayDegree] = useState(true)
   const [noteDisplaySolfege, setNoteDisplaySolfege] = useState(false)
   const [play, setPlay] = useState<Play>("stop")
   const [melodyLength, setMelodyLength] = useState(1)
-  const [noteDuration, setNoteDuration] = useState(1000)
-  const [noteDurationTemp, setNoteDurationTemp] = useState(
-    noteDuration.toString()
-  )
+  const [noteDuration, setNoteDuration] = useState(1)
+
   const [transpose, setTranspose] = useState(0)
   const [keyFixed, setKeyFixed] = useState(true)
+
+  const [immediateFeedbackMode, setImmediateFeedbackMode] = useState(false)
+  const [breakDuration, setBreakDuration] = useState(2)
 
   // Track notes played
   const [playedNotes, setPlayedNotes] = useState<number[]>([])
   const appendPlayedNote = (midiNumber: number) => {
     setPlayedNotes((playedNotes) => [...playedNotes, midiNumber])
   }
+
+  useEffect(() => {
+    if (
+      immediateFeedbackMode &&
+      playedNotes.length > 0 &&
+      playedNotes.length * 2 <= melody.notes.length
+    ) {
+      if (
+        playedNotes[playedNotes.length - 1] !==
+        melody.notes[(playedNotes.length - 1) * 2][0]
+      ) {
+        setSnackbar({
+          open: true,
+          severity: "error",
+          message: "Wrong note!",
+        })
+      } else {
+        if (playedNotes.length * 2 === melody.notes.length) {
+          setSnackbar({
+            open: true,
+            severity: "success",
+            message: "Correct!",
+            callback: nextMelody,
+          })
+        }
+      }
+    }
+  }, [playedNotes])
 
   // Melody
   const makeMelody = (props: {
@@ -115,7 +150,7 @@ export const PianoPage: FC = () => {
     notes.forEach((note) => {
       melody.notes.push(note)
       melody.notes.push([])
-      melody.durations.push(duration)
+      melody.durations.push(duration * 1000)
       melody.durations.push(0)
     })
     return melody
@@ -136,11 +171,6 @@ export const PianoPage: FC = () => {
     melody.durations.forEach((duration, i) => {
       if (duration > 0) melody.durations[i] = duration
     })
-  }
-
-  const noteDurationInputError = () => {
-    const n = Number.parseInt(noteDurationTemp)
-    return isNaN(n) || n < 1
   }
 
   // Bottom Navigational onClick functions
@@ -192,6 +222,7 @@ export const PianoPage: FC = () => {
     open: boolean
     severity: "error" | "success"
     message: string
+    callback?: () => void
   }
   const defaultSnackbar: Snackbar = {
     open: false,
@@ -199,9 +230,6 @@ export const PianoPage: FC = () => {
     message: "",
   }
   const [snackbar, setSnackbar] = useState<Snackbar>(defaultSnackbar)
-  const handleCloseSnackbar = () => {
-    setSnackbar((prevSnackbar) => ({ ...prevSnackbar, open: false }))
-  }
 
   const checkAndPlayAnswer = () => {
     if (play === "piano") {
@@ -263,11 +291,25 @@ export const PianoPage: FC = () => {
     <div className={classes.root}>
       <CustomSnackbar
         open={snackbar.open}
+        autoHideDuration={breakDuration * 1000}
         severity={snackbar.severity}
         message={snackbar.message}
-        onClose={handleCloseSnackbar}
+        onCloseSnackbar={(event, reason) => {
+          if (reason === "timeout") {
+            if (snackbar.callback) snackbar.callback()
+            setSnackbar((prevSnackbar) => ({ ...prevSnackbar, open: false }))
+          }
+        }}
+        onCloseAlert={(event) => {
+          if (snackbar.callback) snackbar.callback()
+          setSnackbar((prevSnackbar) => ({ ...prevSnackbar, open: false }))
+        }}
       />
-      <SettingsDialog open={openSettings} setOpen={setOpenSettings}>
+      <SettingsDialog
+        open={openSettings}
+        setOpen={setOpenSettings}
+        setTouchInput={setTouchInput}
+      >
         <div className={classes.settingsItems}>
           <SettingItemPaper
             title="Note display mode"
@@ -301,7 +343,7 @@ export const PianoPage: FC = () => {
             }
           />
           <SettingItemPaper
-            title={`Melody Length: ${melodyLength}`}
+            title={`Melody length: ${melodyLength}`}
             content={
               <ButtonGroup variant="contained" color="primary">
                 <Button
@@ -377,25 +419,59 @@ export const PianoPage: FC = () => {
             }
           />
           <SettingItemPaper
-            title="Note duration(ms)"
+            title="Durations"
             content={
-              <TextField
-                size="small"
-                variant="outlined"
-                value={noteDurationTemp}
-                onChange={(event) => {
-                  const s = event.target.value
-                  setNoteDurationTemp(s)
-                  const n = parseInt(s)
-                  if (!isNaN(n) && n > 0) {
-                    setNoteDuration(n)
-                    updateMelodyDuration(n)
-                  }
-                }}
-                error={noteDurationInputError()}
-                helperText={
-                  noteDurationInputError() && "Must be a positive integer!"
+              <Fragment>
+                <Typography
+                  gutterBottom
+                >{`Note duration: ${noteDuration}s`}</Typography>
+                <Slider
+                  value={noteDuration}
+                  valueLabelDisplay="auto"
+                  step={0.1}
+                  min={0.1}
+                  max={4}
+                  marks={[
+                    { value: 0.1, label: "0.1s" },
+                    { value: 4, label: "4s" },
+                  ]}
+                  onChange={(event, value) => {
+                    setNoteDuration(value as number)
+                  }}
+                />
+                <Typography
+                  gutterBottom
+                >{`Break duration: ${breakDuration}s`}</Typography>
+                <Slider
+                  value={breakDuration}
+                  valueLabelDisplay="auto"
+                  step={0.1}
+                  min={0.1}
+                  max={4}
+                  marks={[
+                    { value: 0.1, label: "0.1s" },
+                    { value: 4, label: "4s" },
+                  ]}
+                  onChange={(event, value) => {
+                    setBreakDuration(value as number)
+                  }}
+                />
+              </Fragment>
+            }
+          />
+          <SettingItemPaper
+            title="Feedback mode"
+            content={
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={immediateFeedbackMode}
+                    onChange={(event) => {
+                      setImmediateFeedbackMode(event.target.checked)
+                    }}
+                  />
                 }
+                label="Immediate"
               />
             }
           />
@@ -407,7 +483,7 @@ export const PianoPage: FC = () => {
         }}
       />
       <div className={classes.container}>
-        <Paper className={classes.displayNotes}>
+        <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center">
             {playedNotes &&
               (noteDisplayDegree || noteDisplaySolfege) &&
@@ -423,8 +499,9 @@ export const PianoPage: FC = () => {
           </IconButton>
         </Paper>
       </div>
-      <div className={classes.container}>
+      <div className={classes.pianoContainer}>
         <PianoContainer
+          touchInput={touchInput}
           noteDuration={noteDuration}
           melody={melody}
           play={play}

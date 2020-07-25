@@ -1,4 +1,6 @@
+import Button from '@material-ui/core/Button'
 import Dialog from '@material-ui/core/Dialog'
+import DialogActions from '@material-ui/core/DialogActions'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import Grid from '@material-ui/core/Grid'
 import IconButton from '@material-ui/core/IconButton'
@@ -9,8 +11,6 @@ import React, { FC } from 'react'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    root: {},
-    closeButton: {},
     children: { padding: theme.spacing(2) },
   })
 )
@@ -18,12 +18,14 @@ const useStyles = makeStyles((theme: Theme) =>
 export interface IPSettingsDialog {
   open: boolean
   setOpen: (open: boolean) => void
+  setTouchInput: (touchInput: boolean) => void
   children: React.ReactNode
 }
 
 export const SettingsDialog: FC<IPSettingsDialog> = ({
   open,
   setOpen,
+  setTouchInput,
   children,
 }) => {
   const classes = useStyles()
@@ -33,20 +35,21 @@ export const SettingsDialog: FC<IPSettingsDialog> = ({
   }
 
   return (
-    <Dialog onClose={handleClose} open={open}>
-      <DialogTitle disableTypography className={classes.root}>
-        <Grid container alignItems="center">
-          <Grid item xs>
-            <Typography variant="h5">Settings</Typography>
-          </Grid>
-          <Grid item>
-            <IconButton className={classes.closeButton} onClick={handleClose}>
-              <CloseIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-      </DialogTitle>
+    <Dialog open={open}>
+      <DialogTitle>Settings</DialogTitle>
       <div className={classes.children}>{children}</div>
+      <DialogActions>
+        <Button
+          autoFocus
+          onClick={handleClose}
+          onTouchStart={() => {
+            setTouchInput(true)
+          }}
+          color="primary"
+        >
+          CLOSE
+        </Button>
+      </DialogActions>
     </Dialog>
   )
 }

@@ -18,6 +18,7 @@ export interface IPCustomBottomNavigation {
     label: string
     icon: React.ReactNode
     onClick: (event: React.SyntheticEvent<any, Event>) => void
+    disabled?: boolean
   }[]
 }
 
@@ -34,6 +35,7 @@ export const CustomBottomNavigation: React.FC<IPCustomBottomNavigation> = ({
             label={action.label}
             icon={action.icon}
             onClick={action.onClick}
+            disabled={action.disabled}
           />
         ))}
     </BottomNavigation>

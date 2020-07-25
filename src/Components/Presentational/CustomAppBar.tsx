@@ -37,7 +37,7 @@ export const CustomAppBar: FC<IPCustomAppBar> = ({ onClickSettings }) => {
           <MenuIcon />
         </IconButton>
         <div className={classes.musicearContainer}>
-          <img src={Logo} className={classes.logo} />
+          <img src={Logo} className={classes.logo} alt="" />
           <Typography variant="h6" align="center">
             Music Ear
           </Typography>

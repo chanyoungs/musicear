@@ -1,4 +1,4 @@
-import Snackbar from '@material-ui/core/Snackbar'
+import Snackbar, { SnackbarCloseReason } from '@material-ui/core/Snackbar'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import MuiAlert from '@material-ui/lab/Alert'
 import React, { FC } from 'react'
@@ -13,31 +13,38 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export interface IPCustomSnackbar {
   open: boolean
-  onClose: () => void
+  onCloseSnackbar: (
+    event: React.SyntheticEvent<any, Event>,
+    reason: SnackbarCloseReason
+  ) => void
+  onCloseAlert: (event: React.SyntheticEvent<Element, Event>) => void
   severity: "error" | "success"
   message: string
+  callback?: () => void
+  autoHideDuration: number
 }
 
 export const CustomSnackbar: FC<IPCustomSnackbar> = ({
   open,
-  onClose,
+  onCloseSnackbar,
+  onCloseAlert,
   severity,
   message,
+  autoHideDuration,
 }) => {
   const classes = useStyles()
-
   return (
     <Snackbar
       open={open}
-      autoHideDuration={2000}
-      onClose={onClose}
+      autoHideDuration={autoHideDuration}
+      onClose={onCloseSnackbar}
       className={classes.snackbar}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
     >
       <MuiAlert
         elevation={6}
         variant="filled"
-        onClose={onClose}
+        onClose={onCloseAlert}
         severity={severity}
       >
         {message}

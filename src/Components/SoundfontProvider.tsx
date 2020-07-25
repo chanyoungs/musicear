@@ -74,7 +74,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
         const audioNode = instrument.play(
           midiNumber.toString(),
           audioContext.currentTime,
-          { duration: noteDuration / 1000 }
+          { duration: noteDuration }
         )
         setActiveAudioNodes(
           Object.assign({}, activeAudioNodes, {
