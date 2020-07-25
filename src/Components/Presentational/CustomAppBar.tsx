@@ -8,10 +8,17 @@ import MenuIcon from '@material-ui/icons/Menu'
 import SettingsIcon from '@material-ui/icons/Settings'
 import React, { FC } from 'react'
 
+import Logo from './logo192.png'
+
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    title: {
-      flexGrow: 1,
+    musicearContainer: {
+      margin: "auto",
+      display: "flex",
+    },
+    logo: {
+      height: theme.spacing(4),
+      marginRight: theme.spacing(2),
     },
   })
 )
@@ -29,9 +36,12 @@ export const CustomAppBar: FC<IPCustomAppBar> = ({ onClickSettings }) => {
         <IconButton edge="start" color="inherit" aria-label="menu">
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" className={classes.title} align="center">
-          Music Ear
-        </Typography>
+        <div className={classes.musicearContainer}>
+          <img src={Logo} className={classes.logo} />
+          <Typography variant="h6" align="center">
+            Music Ear
+          </Typography>
+        </div>
         <IconButton edge="end" color="inherit" onClick={onClickSettings}>
           <SettingsIcon />
         </IconButton>
