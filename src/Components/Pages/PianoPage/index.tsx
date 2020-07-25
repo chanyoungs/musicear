@@ -128,7 +128,7 @@ export const PianoPage: FC = () => {
     if (!mLength) mLength = melodyLength
     const notes: Note[] = []
     for (let i = 0; i < mLength; i++) {
-      notes.push([degreeToMidinumber(getRandomInt(0, 7))])
+      notes.push([degreeToMidinumber(getRandomInt(1, 8))])
     }
     return makeMelody({ notes })
   }
