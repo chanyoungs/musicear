@@ -5,6 +5,7 @@ import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 
 import { App } from './App'
+import BasicPiano from './Components/test'
 import * as serviceWorker from './serviceWorker'
 import { theme } from './theme'
 
@@ -14,6 +15,7 @@ ReactDOM.render(
     <CssBaseline />
     <App />
   </MuiThemeProvider>,
+
   // </React.StrictMode>,
   document.getElementById("root")
 )

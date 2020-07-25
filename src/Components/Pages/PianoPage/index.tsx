@@ -406,7 +406,7 @@ export const PianoPage: FC = () => {
           <Typography variant="h6" align="center">
             {playedNotes &&
               (noteDisplayDegree || noteDisplaySolfege) &&
-              playedNotes.map((note) => midinumberToNoteName(note)).join(" ⮕ ")}
+              playedNotes.map((note) => midinumberToNoteName(note)).join(", ")}
           </Typography>
           <IconButton
             disabled={playedNotes.length === 0}

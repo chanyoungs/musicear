@@ -1,12 +1,12 @@
+import '../../../react-piano/styles.css'
 import './styles.css'
-import 'react-piano/dist/styles.css'
 
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import useDimensions from 'react-cool-dimensions'
-import { KeyboardShortcuts, MidiNumbers, Piano } from 'react-piano'
 
 import { Melody, Play } from '../../../@types/types'
+import { KeyboardShortcuts, MidiNumbers, Piano } from '../../../react-piano'
 import { LoadingBackdrop } from '../../Presentational/LoadingBackdrop'
 import { SoundfontProvider } from '../../SoundfontProvider'
 import { SoundPlayer } from './SoundPlayer'
@@ -71,6 +71,8 @@ export const PianoContainer: FC<IPPianoContainer> = ({
     }
   }, [play, melodyIndex])
 
+  const [touchInput, setTouchInput] = useState(false)
+
   const keyboardShortcuts: { key: string; midiNumber: number }[] = []
   for (let i = 1; i <= 8; i++) {
     keyboardShortcuts.push({
@@ -89,8 +91,12 @@ export const PianoContainer: FC<IPPianoContainer> = ({
         noteDuration={noteDuration}
         render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
           <Fragment>
-            <LoadingBackdrop open={isLoading} />
+            <LoadingBackdrop
+              isLoading={isLoading}
+              setTouchInput={setTouchInput}
+            />
             <Piano
+              useTouchEvents={touchInput}
               noteRange={noteRange}
               width={width}
               playNote={playNote}
