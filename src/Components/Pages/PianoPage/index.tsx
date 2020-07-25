@@ -87,7 +87,7 @@ const reference = [
   [degreeToMidinumber(1)],
 ]
 
-const referenceDuration = 500
+const referenceDuration = 0.5
 
 export const PianoPage: FC = () => {
   const classes = useStyles()

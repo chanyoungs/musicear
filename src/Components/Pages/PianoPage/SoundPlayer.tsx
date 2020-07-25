@@ -25,7 +25,6 @@ export const SoundPlayer: FC<IPSoundPlayer> = ({
   const [melodyIndex, setMelodyIndex] = useState(0)
   useEffect(() => {
     let timer: NodeJS.Timeout
-
     if (play === "sound") {
       melody.notes[melodyIndex].forEach((note) => {
         playNote(note)
