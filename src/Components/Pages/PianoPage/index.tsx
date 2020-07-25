@@ -132,7 +132,7 @@ export const PianoPage: FC = () => {
             open: true,
             severity: "success",
             message: "Correct!",
-            callback: nextMelody,
+            callback: playNextMelody,
           })
         }
       }
@@ -174,10 +174,11 @@ export const PianoPage: FC = () => {
   }
 
   // Bottom Navigational onClick functions
-
-  const playMelody = () => setPlay(play === "stop" ? "sound" : "stop")
-  const nextMelody = () => {
+  const playMelody = () => setPlay("sound")
+  const stopMelody = () => setPlay("stop")
+  const playNextMelody = () => {
     setPlayedNotes([])
+    let nextMelody: Melody
     if (!keyFixed) {
       setTranspose(getRandomInt(0, 11))
       const referenceMelody = makeMelody({
@@ -185,7 +186,7 @@ export const PianoPage: FC = () => {
         duration: referenceDuration,
       })
       const newRandomMelody = randomMelody()
-      const tempMelody: Melody = {
+      nextMelody = {
         notes: [...referenceMelody.notes, [], ...newRandomMelody.notes],
         durations: [
           ...referenceMelody.durations,
@@ -196,12 +197,11 @@ export const PianoPage: FC = () => {
           setMelody(newRandomMelody)
         },
       }
-      setMelody(tempMelody)
-      setPlay("sound")
     } else {
-      setMelody(randomMelody())
-      setPlay("sound")
+      nextMelody = randomMelody()
     }
+    setMelody(nextMelody)
+    setPlay("sound")
   }
 
   const playReference = () => {
@@ -232,35 +232,31 @@ export const PianoPage: FC = () => {
   const [snackbar, setSnackbar] = useState<Snackbar>(defaultSnackbar)
 
   const checkAndPlayAnswer = () => {
-    if (play === "piano") {
-      setPlay("stop")
+    setPlay("piano")
+    if (playedNotes.length * 2 < melody.notes.length) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Not enough notes played!",
+      })
+    } else if (playedNotes.length * 2 > melody.notes.length) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Too many notes played!",
+      })
     } else {
-      setPlay("piano")
-      if (playedNotes.length * 2 < melody.notes.length) {
-        setSnackbar({
-          open: true,
-          severity: "error",
-          message: "Not enough notes played!",
-        })
-      } else if (playedNotes.length * 2 > melody.notes.length) {
-        setSnackbar({
-          open: true,
-          severity: "error",
-          message: "Too many notes played!",
-        })
-      } else {
-        for (let i = 0; i < playedNotes.length; i++) {
-          if (playedNotes[i] !== melody.notes[i * 2][0]) {
-            setSnackbar({
-              open: true,
-              severity: "error",
-              message: "Incorrect!",
-            })
-            return
-          }
+      for (let i = 0; i < playedNotes.length; i++) {
+        if (playedNotes[i] !== melody.notes[i * 2][0]) {
+          setSnackbar({
+            open: true,
+            severity: "error",
+            message: "Incorrect!",
+          })
+          return
         }
-        setSnackbar({ open: true, severity: "success", message: "Correct!" })
       }
+      setSnackbar({ open: true, severity: "success", message: "Correct!" })
     }
   }
 
@@ -513,28 +509,38 @@ export const PianoPage: FC = () => {
         />
       </div>
       <CustomBottomNavigation
-        bottomNavigationActions={[
-          {
-            label: "Reference",
-            icon: <HelpIcon />,
-            onClick: playReference,
-          },
-          {
-            label: play === "sound" ? "Stop" : "Play",
-            icon: play === "sound" ? <StopIcon /> : <PlayArrowIcon />,
-            onClick: playMelody,
-          },
-          {
-            label: "Next",
-            icon: <SkipNextIcon />,
-            onClick: nextMelody,
-          },
-          {
-            label: play === "piano" ? "Stop" : "Answer",
-            icon: play === "piano" ? <StopIcon /> : <CheckIcon />,
-            onClick: checkAndPlayAnswer,
-          },
-        ]}
+        bottomNavigationActions={
+          play === "stop"
+            ? [
+                {
+                  label: "Reference",
+                  icon: <HelpIcon />,
+                  onClick: playReference,
+                },
+                {
+                  label: "Play",
+                  icon: <PlayArrowIcon />,
+                  onClick: playMelody,
+                },
+                {
+                  label: "Next",
+                  icon: <SkipNextIcon />,
+                  onClick: playNextMelody,
+                },
+                {
+                  label: "Answer",
+                  icon: <CheckIcon />,
+                  onClick: checkAndPlayAnswer,
+                },
+              ]
+            : [
+                {
+                  label: "Stop",
+                  icon: <StopIcon />,
+                  onClick: stopMelody,
+                },
+              ]
+        }
       />
     </div>
   )
