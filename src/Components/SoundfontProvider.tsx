@@ -18,6 +18,7 @@ export interface IPSoundfontProvider {
   soundfont?: "MusyngKite" | "FluidR3_GM"
   transpose: number
   audioContext: AudioContext
+  noteDuration: number
   render: (props: IPRender) => ReactElement
 }
 
@@ -34,6 +35,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   transpose,
   hostname,
   audioContext,
+  noteDuration,
   render,
 }) => {
   const classes = useStyles()
@@ -72,7 +74,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
         const audioNode = instrument.play(
           midiNumber.toString(),
           audioContext.currentTime,
-          { duration: 1 }
+          { duration: noteDuration / 1000 }
         )
         setActiveAudioNodes(
           Object.assign({}, activeAudioNodes, {

@@ -420,6 +420,7 @@ export const PianoPage: FC = () => {
       </div>
       <div className={classes.container}>
         <PianoContainer
+          noteDuration={noteDuration}
           melody={melody}
           play={play}
           setPlay={setPlay}

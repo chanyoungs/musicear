@@ -27,6 +27,7 @@ const noteRange = {
 }
 
 export interface IPPianoContainer {
+  noteDuration: number
   melody: Melody
   play: Play
   setPlay: (play: Play) => void
@@ -37,6 +38,7 @@ export interface IPPianoContainer {
 }
 
 export const PianoContainer: FC<IPPianoContainer> = ({
+  noteDuration,
   melody,
   play,
   setPlay,
@@ -84,6 +86,7 @@ export const PianoContainer: FC<IPPianoContainer> = ({
         audioContext={audioContext}
         hostname={soundfontHostname}
         transpose={transpose}
+        noteDuration={noteDuration}
         render={({ isLoading, playNote, stopNote, stopAllNotes }) => (
           <Fragment>
             <LoadingBackdrop open={isLoading} />
