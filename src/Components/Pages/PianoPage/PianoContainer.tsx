@@ -1,5 +1,4 @@
 import '../../../react-piano/styles.css'
-import './styles.css'
 
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import React, { FC, Fragment, useEffect, useState } from 'react'
@@ -53,17 +52,15 @@ export const PianoContainer: FC<IPPianoContainer> = ({
   const [melodyIndex, setMelodyIndex] = useState(0)
   useEffect(() => {
     let timer: NodeJS.Timeout
-    if (play === "piano") {
-      if (melodyIndex < melody.notes.length - 1) {
-        timer = setTimeout(() => {
-          setMelodyIndex(melodyIndex + 1)
-        }, melody.durations[melodyIndex])
-      } else {
-        setMelodyIndex(0)
-        setPlay("stop")
-        if (melody.callback) {
-          melody.callback()
-        }
+    if (play === "piano" && melodyIndex < melody.notes.length - 1) {
+      timer = setTimeout(() => {
+        setMelodyIndex(melodyIndex + 1)
+      }, melody.durations[melodyIndex])
+    } else if (play !== "sound") {
+      setMelodyIndex(0)
+      setPlay("stop")
+      if (melody.callback) {
+        melody.callback()
       }
     }
     return () => {

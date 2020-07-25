@@ -1,6 +1,3 @@
-import './styles.css'
-import 'react-piano/dist/styles.css'
-
 import { Typography } from '@material-ui/core'
 import Button from '@material-ui/core/Button'
 import ButtonGroup from '@material-ui/core/ButtonGroup'
@@ -207,27 +204,35 @@ export const PianoPage: FC = () => {
   }
 
   const checkAndPlayAnswer = () => {
-    setPlay("piano")
-    if (playedNotes.length * 2 < melody.notes.length) {
-      setSnackbar({
-        open: true,
-        severity: "error",
-        message: "Not enough notes played!",
-      })
-    } else if (playedNotes.length * 2 > melody.notes.length) {
-      setSnackbar({
-        open: true,
-        severity: "error",
-        message: "Too many notes played!",
-      })
+    if (play === "piano") {
+      setPlay("stop")
     } else {
-      for (let i = 0; i < playedNotes.length; i++) {
-        if (playedNotes[i] !== melody.notes[i * 2][0]) {
-          setSnackbar({ open: true, severity: "error", message: "Incorrect!" })
-          return
+      setPlay("piano")
+      if (playedNotes.length * 2 < melody.notes.length) {
+        setSnackbar({
+          open: true,
+          severity: "error",
+          message: "Not enough notes played!",
+        })
+      } else if (playedNotes.length * 2 > melody.notes.length) {
+        setSnackbar({
+          open: true,
+          severity: "error",
+          message: "Too many notes played!",
+        })
+      } else {
+        for (let i = 0; i < playedNotes.length; i++) {
+          if (playedNotes[i] !== melody.notes[i * 2][0]) {
+            setSnackbar({
+              open: true,
+              severity: "error",
+              message: "Incorrect!",
+            })
+            return
+          }
         }
+        setSnackbar({ open: true, severity: "success", message: "Correct!" })
       }
-      setSnackbar({ open: true, severity: "success", message: "Correct!" })
     }
   }
 
@@ -300,15 +305,6 @@ export const PianoPage: FC = () => {
             content={
               <ButtonGroup variant="contained" color="primary">
                 <Button
-                  onClick={() => {
-                    const mLength = melodyLength + 1
-                    setMelodyLength(mLength)
-                    setMelody(randomMelody(mLength))
-                  }}
-                >
-                  <AddIcon />
-                </Button>
-                <Button
                   disabled={melodyLength < 2}
                   onClick={() => {
                     if (melodyLength > 1) {
@@ -319,6 +315,15 @@ export const PianoPage: FC = () => {
                   }}
                 >
                   <RemoveIcon />
+                </Button>
+                <Button
+                  onClick={() => {
+                    const mLength = melodyLength + 1
+                    setMelodyLength(mLength)
+                    setMelody(randomMelody(mLength))
+                  }}
+                >
+                  <AddIcon />
                 </Button>
               </ButtonGroup>
             }
@@ -344,20 +349,20 @@ export const PianoPage: FC = () => {
                   <Button
                     disabled={!keyFixed}
                     onClick={() => {
-                      setTranspose(transpose + 1)
-                      setMelody(randomMelody())
-                    }}
-                  >
-                    <AddIcon />
-                  </Button>
-                  <Button
-                    disabled={!keyFixed}
-                    onClick={() => {
                       setTranspose(transpose - 1)
                       setMelody(randomMelody())
                     }}
                   >
                     <RemoveIcon />
+                  </Button>
+                  <Button
+                    disabled={!keyFixed}
+                    onClick={() => {
+                      setTranspose(transpose + 1)
+                      setMelody(randomMelody())
+                    }}
+                  >
+                    <AddIcon />
                   </Button>
                   <Button
                     disabled={!keyFixed}
@@ -438,8 +443,8 @@ export const PianoPage: FC = () => {
             onClick: playReference,
           },
           {
-            label: "Play",
-            icon: play === "stop" ? <PlayArrowIcon /> : <StopIcon />,
+            label: play === "sound" ? "Stop" : "Play",
+            icon: play === "sound" ? <StopIcon /> : <PlayArrowIcon />,
             onClick: playMelody,
           },
           {
@@ -448,8 +453,8 @@ export const PianoPage: FC = () => {
             onClick: nextMelody,
           },
           {
-            label: "Answer",
-            icon: <CheckIcon />,
+            label: play === "piano" ? "Stop" : "Answer",
+            icon: play === "piano" ? <StopIcon /> : <CheckIcon />,
             onClick: checkAndPlayAnswer,
           },
         ]}
