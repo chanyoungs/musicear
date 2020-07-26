@@ -9,10 +9,11 @@ import Paper from '@material-ui/core/Paper'
 import Slider from '@material-ui/core/Slider'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import AddIcon from '@material-ui/icons/Add'
+import BackspaceIcon from '@material-ui/icons/Backspace'
 import CheckIcon from '@material-ui/icons/Check'
+import ClearIcon from '@material-ui/icons/Clear'
 import HelpIcon from '@material-ui/icons/Help'
 import PlayArrowIcon from '@material-ui/icons/PlayArrow'
-import RefreshIcon from '@material-ui/icons/Refresh'
 import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
@@ -36,7 +37,7 @@ const useStyles = makeStyles((theme: Theme) =>
       justifyContent: "spaceBetween",
       width: "100%",
     },
-    container: {
+    displayPaperContainer: {
       padding: theme.spacing(2),
       width: "100%",
       flex: 1,
@@ -46,10 +47,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     pianoContainer: {
       margin: theme.spacing(2),
-    },
-    filler: {
-      padding: 0,
-      flex: 1,
     },
     settingsItems: {
       overflow: "auto",
@@ -479,21 +476,31 @@ export const PianoPage: FC = () => {
           setOpenSettings(true)
         }}
       />
-      <div className={classes.container}>
+      <div className={classes.displayPaperContainer}>
         <Paper className={classes.displayPaper}>
-          <Typography variant="h6" align="center">
-            {playedNotes &&
-              (noteDisplayDegree || noteDisplaySolfege) &&
-              playedNotes.map((note) => midinumberToNoteName(note)).join(", ")}
+          <Typography variant="h6" align="center" display="inline">
+            {playedNotes.length > 0 && (noteDisplayDegree || noteDisplaySolfege)
+              ? playedNotes.map((note) => midinumberToNoteName(note)).join(", ")
+              : "..."}
           </Typography>
-          <IconButton
-            disabled={playedNotes.length === 0}
-            onClick={() => {
-              setPlayedNotes([])
-            }}
-          >
-            <RefreshIcon />
-          </IconButton>
+          <div>
+            <IconButton
+              disabled={playedNotes.length === 0}
+              onClick={() => {
+                setPlayedNotes(playedNotes.slice(0, -1))
+              }}
+            >
+              <BackspaceIcon />
+            </IconButton>
+            <IconButton
+              disabled={playedNotes.length === 0}
+              onClick={() => {
+                setPlayedNotes([])
+              }}
+            >
+              <ClearIcon />
+            </IconButton>
+          </div>
         </Paper>
       </div>
       <div className={classes.pianoContainer}>
