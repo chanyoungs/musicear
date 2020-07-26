@@ -117,8 +117,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   return render({
     isLoading: !instrument,
     playNote,
-    stopNote: () => {},
-    // stopNote,
+    stopNote,
     stopAllNotes,
   })
 }

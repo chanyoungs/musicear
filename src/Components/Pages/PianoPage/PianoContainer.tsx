@@ -93,14 +93,17 @@ export const PianoContainer: FC<IPPianoContainer> = ({
               useTouchEvents={touchInput}
               noteRange={noteRange}
               width={width}
+              // keyWidthToHeight={1}
               playNote={playNote}
-              stopNote={stopNote}
+              // stopNote={stopNote}
+              stopNote={() => {}}
               disabled={isLoading}
               keyboardShortcuts={keyboardShortcuts}
               activeNotes={
                 play === "piano" ? melody.notes[melodyIndex] : undefined
               }
               onPlayNoteInput={(midiNumber: number) => {
+                stopAllNotes()
                 appendPlayedNote(midiNumber)
               }}
             />

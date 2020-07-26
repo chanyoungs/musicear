@@ -128,6 +128,7 @@ export const PianoPage: FC = () => {
         })
       } else {
         if (playedNotes.length * 2 === melody.notes.length) {
+          setPlay("stop")
           setSnackbar({
             open: true,
             severity: "success",
