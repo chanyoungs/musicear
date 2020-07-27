@@ -55,6 +55,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
       Soundfont.instrument(audioContext, instrumentName, {
         format,
         soundfont,
+        gain: 15,
         nameToUrl: (
           name: string,
           soundfont: IPSoundfontProvider["soundfont"],
