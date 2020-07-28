@@ -17,7 +17,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow'
 import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
-import React, { FC, Fragment, useCallback, useEffect, useState } from 'react'
+import React, { FC, Fragment, useEffect, useState } from 'react'
 
 import { Melody, Note, Play } from '../../../@types/types'
 import { getRandomInt, noteNames, scaleIntervals } from '../../../utils'
@@ -117,20 +117,20 @@ export const PianoPage: FC = () => {
   const [melodyNotes, setMelodyNotes] = useState<Note[]>([])
 
   // Track notes played
-  const [playedNotes, setPlayedNotes] = useState<number[]>([])
+  const [playedNotes, setPlayedNotes] = useState<Note[]>([])
   const appendPlayedNote = (midiNumber: number) => {
-    setPlayedNotes((playedNotes) => [...playedNotes, midiNumber])
+    setPlayedNotes((playedNotes) => [...playedNotes, [midiNumber]])
   }
 
   useEffect(() => {
     if (
       immediateFeedbackMode &&
       playedNotes.length > 0 &&
-      playedNotes.length * 2 <= melody.notes.length
+      playedNotes.length <= melodyNotes.length
     ) {
       if (
-        playedNotes[playedNotes.length - 1] !==
-        melody.notes[(playedNotes.length - 1) * 2][0]
+        playedNotes[playedNotes.length - 1][0] !==
+        melodyNotes[playedNotes.length - 1][0]
       ) {
         setSnackbar({
           open: true,
@@ -139,7 +139,7 @@ export const PianoPage: FC = () => {
           callback: adversarialMode ? playNextMelody : undefined,
         })
       } else {
-        if (playedNotes.length * 2 === melody.notes.length) {
+        if (playedNotes.length === melodyNotes.length) {
           setPlay("stop")
           setSnackbar({
             open: true,
@@ -193,13 +193,6 @@ export const PianoPage: FC = () => {
   }
 
   const [melody, setMelody] = useState<Melody>(() => randomMelody())
-
-  // Melody duration
-  const updateMelodyDuration = (duration: number) => {
-    melody.durations.forEach((duration, i) => {
-      if (duration > 0) melody.durations[i] = duration
-    })
-  }
 
   // Bottom Navigational onClick functions
   const playMelody = () => setPlay("sound")
@@ -261,13 +254,13 @@ export const PianoPage: FC = () => {
 
   const checkAndPlayAnswer = () => {
     setPlay("piano")
-    if (playedNotes.length * 2 < melody.notes.length) {
+    if (playedNotes.length < melodyNotes.length) {
       setSnackbar({
         open: true,
         severity: "error",
         message: "Not enough notes played!",
       })
-    } else if (playedNotes.length * 2 > melody.notes.length) {
+    } else if (playedNotes.length > melodyNotes.length) {
       setSnackbar({
         open: true,
         severity: "error",
@@ -275,7 +268,7 @@ export const PianoPage: FC = () => {
       })
     } else {
       for (let i = 0; i < playedNotes.length; i++) {
-        if (playedNotes[i] !== melody.notes[i * 2][0]) {
+        if (playedNotes[i][0] !== melodyNotes[i][0]) {
           setSnackbar({
             open: true,
             severity: "error",
@@ -586,7 +579,9 @@ export const PianoPage: FC = () => {
         <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center" display="inline">
             {playedNotes.length > 0 && (noteDisplayDegree || noteDisplaySolfege)
-              ? playedNotes.map((note) => midinumberToNoteName(note)).join(", ")
+              ? playedNotes
+                  .map((note) => midinumberToNoteName(note[0]))
+                  .join(", ")
               : "..."}
           </Typography>
           <div>

@@ -1,5 +1,4 @@
 import Backdrop from '@material-ui/core/Backdrop'
-import Button from '@material-ui/core/Button'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import React, { FC } from 'react'
