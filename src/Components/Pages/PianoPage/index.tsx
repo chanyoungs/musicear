@@ -575,10 +575,14 @@ export const PianoPage: FC = () => {
           setOpenSettings(true)
         }}
       />
-      <Typography className={classes.displayResult} align="center" variant="h6">
-        {displayResult()}
-      </Typography>
       <div className={classes.displayPaperContainer}>
+        <Typography
+          className={classes.displayResult}
+          align="center"
+          variant="h6"
+        >
+          {displayResult()}
+        </Typography>
         <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center" display="inline">
             {playedNotes.length > 0 && (noteDisplayDegree || noteDisplaySolfege)
