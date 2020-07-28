@@ -17,7 +17,7 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow'
 import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
-import React, { FC, Fragment, useEffect, useState } from 'react'
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react'
 
 import { Melody, Note, Play } from '../../../@types/types'
 import { getRandomInt, noteNames, scaleIntervals } from '../../../utils'
@@ -114,6 +114,7 @@ export const PianoPage: FC = () => {
     results[0] - results[1]
 
   const [history, setHistory] = useState<History>({})
+  const [melodyNotes, setMelodyNotes] = useState<Note[]>([])
 
   // Track notes played
   const [playedNotes, setPlayedNotes] = useState<number[]>([])
@@ -169,6 +170,7 @@ export const PianoPage: FC = () => {
   }
 
   const randomMelody = (mLength?: number) => {
+    let notes: Note[]
     if (adversarialMode && melodyLength in history && Math.random() < 0.2) {
       const melodyLengthObj = history[melodyLength]
 
@@ -178,20 +180,19 @@ export const PianoPage: FC = () => {
           getAdversarialWeight(melodyLengthObj[key2])
       )
       const chosenKey = sortedKeys[0]
-      const notes: Note[] = chosenKey
-        .split(",")
-        .map((keyString) => [parseInt(keyString)])
-      return makeMelody({ notes })
+      notes = chosenKey.split(",").map((keyString) => [parseInt(keyString)])
+    } else {
+      notes = []
+      if (!mLength) mLength = melodyLength
+      for (let i = 0; i < mLength; i++) {
+        notes.push([degreeToMidinumber(getRandomInt(1, 8))])
+      }
     }
-
-    const notes: Note[] = []
-    if (!mLength) mLength = melodyLength
-    for (let i = 0; i < mLength; i++) {
-      notes.push([degreeToMidinumber(getRandomInt(1, 8))])
-    }
+    setMelodyNotes(notes)
     return makeMelody({ notes })
   }
-  const [melody, setMelody] = useState<Melody>(randomMelody())
+
+  const [melody, setMelody] = useState<Melody>(() => randomMelody())
 
   // Melody duration
   const updateMelodyDuration = (duration: number) => {
@@ -288,13 +289,7 @@ export const PianoPage: FC = () => {
   }
 
   // History
-  const getHistoryKey = () => {
-    const history: string[] = []
-    for (let i = 0; i < melody.notes.length; i += 2) {
-      history.push(melody.notes[i][0].toString())
-    }
-    return history.join(",")
-  }
+  const getHistoryKey = () => melodyNotes.join(",")
 
   useEffect(() => {
     if (snackbar.open) {
