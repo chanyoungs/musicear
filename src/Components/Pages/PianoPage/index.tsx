@@ -65,6 +65,8 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
+type History = { [key: number]: { [key: string]: [number, number] } }
+
 const rootNote = 48
 
 const degreeToMidinumber = (scaleDegree: number) => {
@@ -94,13 +96,21 @@ export const PianoPage: FC = () => {
   const [noteDisplaySolfege, setNoteDisplaySolfege] = useState(false)
   const [play, setPlay] = useState<Play>("stop")
   const [melodyLength, setMelodyLength] = useState(1)
+
   const [noteDuration, setNoteDuration] = useState(1)
+  const [breakDuration, setBreakDuration] = useState(2)
+  const [volume, setVolume] = useState(10)
+  const [tempVolume, setTempVolume] = useState(volume * 10)
 
   const [transpose, setTranspose] = useState(0)
   const [keyFixed, setKeyFixed] = useState(true)
 
   const [immediateFeedbackMode, setImmediateFeedbackMode] = useState(false)
-  const [breakDuration, setBreakDuration] = useState(2)
+  const [adversarialMode, setAdversarialMode] = useState(false)
+  const getAdversarialWeight = (results: [number, number]) =>
+    results[0] - results[1]
+
+  const [history, setHistory] = useState<History>({})
 
   // Track notes played
   const [playedNotes, setPlayedNotes] = useState<number[]>([])
@@ -122,6 +132,7 @@ export const PianoPage: FC = () => {
           open: true,
           severity: "error",
           message: "Wrong note!",
+          callback: adversarialMode ? playNextMelody : undefined,
         })
       } else {
         if (playedNotes.length * 2 === melody.notes.length) {
@@ -155,8 +166,23 @@ export const PianoPage: FC = () => {
   }
 
   const randomMelody = (mLength?: number) => {
-    if (!mLength) mLength = melodyLength
+    if (adversarialMode && melodyLength in history && Math.random() < 0.2) {
+      const melodyLengthObj = history[melodyLength]
+
+      const sortedKeys = Object.keys(melodyLengthObj).sort(
+        (key1, key2) =>
+          getAdversarialWeight(melodyLengthObj[key1]) -
+          getAdversarialWeight(melodyLengthObj[key2])
+      )
+      const chosenKey = sortedKeys[0]
+      const notes: Note[] = chosenKey
+        .split(",")
+        .map((keyString) => [parseInt(keyString)])
+      return makeMelody({ notes })
+    }
+
     const notes: Note[] = []
+    if (!mLength) mLength = melodyLength
     for (let i = 0; i < mLength; i++) {
       notes.push([degreeToMidinumber(getRandomInt(1, 8))])
     }
@@ -256,6 +282,50 @@ export const PianoPage: FC = () => {
       }
       setSnackbar({ open: true, severity: "success", message: "Correct!" })
     }
+  }
+
+  // History
+  const getHistoryKey = () => {
+    const history: string[] = []
+    for (let i = 0; i < melody.notes.length; i += 2) {
+      history.push(melody.notes[i][0].toString())
+    }
+    return history.join(",")
+  }
+
+  useEffect(() => {
+    if (snackbar.open) {
+      setHistory((prevHistory) => {
+        const historyKey = getHistoryKey()
+        const newHistory = { ...prevHistory }
+        if (!(melodyLength in newHistory)) {
+          newHistory[melodyLength] = {}
+        }
+        const melodyLengthObject = newHistory[melodyLength]
+        if (!(historyKey in melodyLengthObject)) {
+          melodyLengthObject[historyKey] = [0, 0] // [Corrects, Wrongs]
+        }
+        melodyLengthObject[historyKey][
+          snackbar.severity === "error" ? 1 : 0
+        ] += 1
+        return newHistory
+      })
+    }
+  }, [snackbar])
+
+  const displayResult = () => {
+    let resultText = "First attempt"
+    if (melodyLength in history) {
+      const melodyNumberObj = history[melodyLength]
+      const melodyKey = getHistoryKey()
+      if (melodyKey in melodyNumberObj) {
+        const result = melodyNumberObj[melodyKey]
+        resultText = `Correct: ${result[0]} Wrong: ${result[1]} Total: ${
+          result[0] + result[1]
+        }`
+      }
+    }
+    return resultText
   }
 
   // Key names
@@ -413,9 +483,27 @@ export const PianoPage: FC = () => {
             }
           />
           <SettingItemPaper
-            title="Durations"
+            title="Values"
             content={
               <Fragment>
+                <Typography gutterBottom>{`Volume: ${tempVolume}%`}</Typography>
+                <Slider
+                  value={tempVolume}
+                  valueLabelDisplay="auto"
+                  step={1}
+                  min={0}
+                  max={200}
+                  marks={[
+                    { value: 0, label: "0" },
+                    { value: 200, label: "200" },
+                  ]}
+                  onChange={(event, value) => {
+                    setTempVolume(value as number)
+                  }}
+                  onChangeCommitted={(event, value) => {
+                    setVolume((value as number) / 10)
+                  }}
+                />
                 <Typography
                   gutterBottom
                 >{`Note duration: ${noteDuration}s`}</Typography>
@@ -454,19 +542,32 @@ export const PianoPage: FC = () => {
             }
           />
           <SettingItemPaper
-            title="Feedback mode"
+            title="Play mode"
             content={
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={immediateFeedbackMode}
-                    onChange={(event) => {
-                      setImmediateFeedbackMode(event.target.checked)
-                    }}
-                  />
-                }
-                label="Immediate"
-              />
+              <Fragment>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={immediateFeedbackMode}
+                      onChange={(event) => {
+                        setImmediateFeedbackMode(event.target.checked)
+                      }}
+                    />
+                  }
+                  label="Immediate feedback"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={adversarialMode}
+                      onChange={(event) => {
+                        setAdversarialMode(event.target.checked)
+                      }}
+                    />
+                  }
+                  label="Adversarial"
+                />
+              </Fragment>
             }
           />
         </div>
@@ -476,6 +577,7 @@ export const PianoPage: FC = () => {
           setOpenSettings(true)
         }}
       />
+      <Typography align="center">{displayResult()}</Typography>
       <div className={classes.displayPaperContainer}>
         <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center" display="inline">
@@ -507,6 +609,7 @@ export const PianoPage: FC = () => {
         <PianoContainer
           touchInput={touchInput}
           noteDuration={noteDuration}
+          volume={volume}
           melody={melody}
           play={play}
           setPlay={setPlay}

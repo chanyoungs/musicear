@@ -19,6 +19,7 @@ export interface IPSoundfontProvider {
   transpose: number
   audioContext: AudioContext
   noteDuration: number
+  volume: number
   render: (props: IPRender) => ReactElement
 }
 
@@ -36,6 +37,7 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   hostname,
   audioContext,
   noteDuration,
+  volume,
   render,
 }) => {
   const classes = useStyles()
@@ -44,18 +46,17 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
 
   useEffect(() => {
     loadInstrument(instrumentName)
-  }, [instrumentName])
+  }, [instrumentName, volume])
 
   const loadInstrument = (
     instrumentName: IPSoundfontProvider["instrumentName"]
   ) => {
     setInstrument(null)
-
     if (instrumentName)
       Soundfont.instrument(audioContext, instrumentName, {
         format,
         soundfont,
-        gain: 15,
+        gain: volume,
         nameToUrl: (
           name: string,
           soundfont: IPSoundfontProvider["soundfont"],
