@@ -45,6 +45,9 @@ const useStyles = makeStyles((theme: Theme) =>
       flexDirection: "column",
       justifyContent: "center",
     },
+    displayResult: {
+      color: theme.palette.common.white,
+    },
     pianoContainer: {
       margin: theme.spacing(2),
     },
@@ -577,7 +580,9 @@ export const PianoPage: FC = () => {
           setOpenSettings(true)
         }}
       />
-      <Typography align="center">{displayResult()}</Typography>
+      <Typography className={classes.displayResult} align="center" variant="h6">
+        {displayResult()}
+      </Typography>
       <div className={classes.displayPaperContainer}>
         <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center" display="inline">
