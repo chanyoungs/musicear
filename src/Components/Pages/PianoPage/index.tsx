@@ -566,6 +566,7 @@ export const PianoPage: FC = () => {
       <CustomAppBar
         onClickSettings={() => {
           setOpenSettings(true)
+          setPlay("stop")
         }}
       />
       <div className={classes.displayPaperContainer}>
