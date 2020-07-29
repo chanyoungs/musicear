@@ -1,8 +1,8 @@
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import { FC, useEffect, useState } from 'react'
 
-import { Melody, Play } from '../../../@types/types'
 import { IPRender } from '../../SoundfontProvider'
+import { Melody, Play } from './types'
 
 const useStyles = makeStyles((theme: Theme) => createStyles({}))
 

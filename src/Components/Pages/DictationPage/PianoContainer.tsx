@@ -4,11 +4,11 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import useDimensions from 'react-cool-dimensions'
 
-import { Melody, Play } from '../../../@types/types'
 import { KeyboardShortcuts, MidiNumbers, Piano } from '../../../react-piano'
 import { LoadingBackdrop } from '../../Presentational/LoadingBackdrop'
 import { SoundfontProvider } from '../../SoundfontProvider'
 import { SoundPlayer } from './SoundPlayer'
+import { Melody, Play } from './types'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

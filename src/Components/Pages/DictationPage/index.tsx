@@ -18,8 +18,11 @@ import RemoveIcon from '@material-ui/icons/Remove'
 import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
 import React, { FC, Fragment, useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { isLoaded } from 'react-redux-firebase'
+import { uploadHistory, uploadSettings } from 'src/store/actions/uploadActions'
+import { AppState } from 'src/store/reducers/rootReducer'
 
-import { Melody, Note, Play } from '../../../@types/types'
 import { getRandomInt, noteNames, scaleIntervals } from '../../../utils'
 import { CustomAppBar } from '../../Presentational/CustomAppBar'
 import { CustomBottomNavigation } from '../../Presentational/CustomBottomNavigation'
@@ -27,6 +30,7 @@ import { CustomSnackbar } from '../../Presentational/CustomSnackbar'
 import { SettingItemPaper } from '../../Presentational/SettingItemPaper'
 import { SettingsDialog } from '../../Presentational/SettingsDialog'
 import { PianoContainer } from './PianoContainer'
+import { defaultSettings, IHistory, ISettings, Melody, Note, Play } from './types'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -68,8 +72,6 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
-type History = { [key: number]: { [key: string]: [number, number] } }
-
 const rootNote = 48
 
 const degreeToMidinumber = (scaleDegree: number) => {
@@ -93,27 +95,31 @@ const referenceDuration = 0.5
 
 export const PianoPage: FC = () => {
   const classes = useStyles()
+
+  const dispatch = useDispatch()
+
+  const firestoreSettings = useSelector<AppState, ISettings>(
+    (state) => state.firebase.profile.settings
+  )
+  const firestoreHistory = useSelector<AppState, IHistory>(
+    (state) => state.firebase.profile.history
+  )
+
+  const [settings, setSettings] = useState<ISettings>(defaultSettings)
+  const [history, setHistory] = useState<IHistory>({})
+
+  useEffect(() => {
+    firestoreSettings && setSettings(firestoreSettings)
+  }, [firestoreSettings])
+
+  useEffect(() => {
+    firestoreHistory && setHistory(firestoreHistory)
+  }, [firestoreHistory])
+
   const [openSettings, setOpenSettings] = useState(true)
   const [touchInput, setTouchInput] = useState(false)
-  const [noteDisplayDegree, setNoteDisplayDegree] = useState(true)
-  const [noteDisplaySolfege, setNoteDisplaySolfege] = useState(false)
+  const [tempVolume, setTempVolume] = useState(defaultSettings.volume)
   const [play, setPlay] = useState<Play>("stop")
-  const [melodyLength, setMelodyLength] = useState(1)
-
-  const [noteDuration, setNoteDuration] = useState(1)
-  const [breakDuration, setBreakDuration] = useState(2)
-  const [volume, setVolume] = useState(10)
-  const [tempVolume, setTempVolume] = useState(volume * 10)
-
-  const [transpose, setTranspose] = useState(0)
-  const [keyFixed, setKeyFixed] = useState(true)
-
-  const [immediateFeedbackMode, setImmediateFeedbackMode] = useState(false)
-  const [adversarialMode, setAdversarialMode] = useState(false)
-  const getAdversarialWeight = (results: [number, number]) =>
-    results[0] - results[1]
-
-  const [history, setHistory] = useState<History>({})
   const [melodyNotes, setMelodyNotes] = useState<Note[]>([])
 
   // Track notes played
@@ -124,7 +130,7 @@ export const PianoPage: FC = () => {
 
   useEffect(() => {
     if (
-      immediateFeedbackMode &&
+      settings.immediateFeedbackMode &&
       playedNotes.length > 0 &&
       playedNotes.length <= melodyNotes.length
     ) {
@@ -136,7 +142,7 @@ export const PianoPage: FC = () => {
           open: true,
           severity: "error",
           message: "Wrong note!",
-          callback: adversarialMode ? playNextMelody : undefined,
+          callback: settings.adversarialMode ? playNextMelody : undefined,
         })
       } else {
         if (playedNotes.length === melodyNotes.length) {
@@ -158,7 +164,7 @@ export const PianoPage: FC = () => {
     callback?: () => void
     duration?: number
   }) => {
-    const { notes, callback, duration = noteDuration } = props
+    const { notes, callback, duration = settings.noteDuration } = props
     const melody: Melody = { notes: [], durations: [], callback }
     notes.forEach((note) => {
       melody.notes.push(note)
@@ -169,10 +175,17 @@ export const PianoPage: FC = () => {
     return melody
   }
 
+  const getAdversarialWeight = (results: [number, number]) =>
+    results[0] - results[1]
+
   const randomMelody = (mLength?: number) => {
     let notes: Note[]
-    if (adversarialMode && melodyLength in history && Math.random() < 0.2) {
-      const melodyLengthObj = history[melodyLength]
+    if (
+      settings.adversarialMode &&
+      settings.melodyLength in history &&
+      Math.random() < 0.2
+    ) {
+      const melodyLengthObj = history[settings.melodyLength]
 
       const sortedKeys = Object.keys(melodyLengthObj).sort(
         (key1, key2) =>
@@ -183,7 +196,7 @@ export const PianoPage: FC = () => {
       notes = chosenKey.split(",").map((keyString) => [parseInt(keyString)])
     } else {
       notes = []
-      if (!mLength) mLength = melodyLength
+      if (!mLength) mLength = settings.melodyLength
       for (let i = 0; i < mLength; i++) {
         notes.push([degreeToMidinumber(getRandomInt(1, 8))])
       }
@@ -200,8 +213,11 @@ export const PianoPage: FC = () => {
   const playNextMelody = () => {
     setPlayedNotes([])
     let nextMelody: Melody
-    if (!keyFixed) {
-      setTranspose(getRandomInt(0, 11))
+    if (!settings.keyFixed) {
+      setSettings((prevSettings) => ({
+        ...prevSettings,
+        transpose: getRandomInt(0, 11),
+      }))
       const referenceMelody = makeMelody({
         notes: reference,
         duration: referenceDuration,
@@ -211,7 +227,7 @@ export const PianoPage: FC = () => {
         notes: [...referenceMelody.notes, [], ...newRandomMelody.notes],
         durations: [
           ...referenceMelody.durations,
-          noteDuration,
+          settings.noteDuration,
           ...newRandomMelody.durations,
         ],
         callback: () => {
@@ -289,16 +305,18 @@ export const PianoPage: FC = () => {
       setHistory((prevHistory) => {
         const historyKey = getHistoryKey()
         const newHistory = { ...prevHistory }
-        if (!(melodyLength in newHistory)) {
-          newHistory[melodyLength] = {}
+        if (!(settings.melodyLength in newHistory)) {
+          newHistory[settings.melodyLength] = {}
         }
-        const melodyLengthObject = newHistory[melodyLength]
+        const melodyLengthObject = newHistory[settings.melodyLength]
         if (!(historyKey in melodyLengthObject)) {
           melodyLengthObject[historyKey] = [0, 0] // [Corrects, Wrongs]
         }
         melodyLengthObject[historyKey][
           snackbar.severity === "error" ? 1 : 0
         ] += 1
+
+        dispatch(uploadHistory(newHistory))
         return newHistory
       })
     }
@@ -306,8 +324,8 @@ export const PianoPage: FC = () => {
 
   const displayResult = () => {
     let resultText = "First attempt"
-    if (melodyLength in history) {
-      const melodyNumberObj = history[melodyLength]
+    if (settings.melodyLength in history) {
+      const melodyNumberObj = history[settings.melodyLength]
       const melodyKey = getHistoryKey()
       if (melodyKey in melodyNumberObj) {
         const result = melodyNumberObj[melodyKey]
@@ -321,32 +339,34 @@ export const PianoPage: FC = () => {
 
   // Key names
   const getKeyName = () => {
-    const keyName = noteNames.letter[(rootNote + transpose - 4) % 11]
-    const octave = Math.floor((rootNote + transpose - 4) / 11)
+    const keyName = noteNames.letter[(rootNote + settings.transpose - 4) % 11]
+    const octave = Math.floor((rootNote + settings.transpose - 4) / 11)
     return { keyName, octave }
   }
 
   const midinumberToNoteName = (midiNumber: number) => {
-    if (!noteDisplayDegree && !noteDisplaySolfege) return ""
+    if (!settings.noteDisplayDegree && !settings.noteDisplaySolfege) return ""
 
     const relativeMidinumber = midiNumber - rootNote
     const interval = relativeMidinumber % 12
     const octave = Math.floor(relativeMidinumber / 12)
     const scaleDegree = noteNames.degree[interval]
     const nameDegree = (scaleDegree[0] + octave * 7).toString() + scaleDegree[1]
-    if (noteDisplayDegree && !noteDisplaySolfege) return nameDegree
+    if (settings.noteDisplayDegree && !settings.noteDisplaySolfege)
+      return nameDegree
 
     const nameSolfege = noteNames.solfege[interval]
-    if (!noteDisplayDegree && noteDisplaySolfege) return nameSolfege
+    if (!settings.noteDisplayDegree && settings.noteDisplaySolfege)
+      return nameSolfege
 
     return nameDegree + " " + nameSolfege
   }
 
-  return (
+  return isLoaded(settings) && isLoaded(history) ? (
     <div className={classes.root}>
       <CustomSnackbar
         open={snackbar.open}
-        autoHideDuration={breakDuration * 1000}
+        autoHideDuration={settings.breakDuration * 1000}
         severity={snackbar.severity}
         message={snackbar.message}
         onCloseSnackbar={(event, reason) => {
@@ -364,6 +384,9 @@ export const PianoPage: FC = () => {
         open={openSettings}
         setOpen={setOpenSettings}
         setTouchInput={setTouchInput}
+        onSave={() => {
+          dispatch(uploadSettings(settings))
+        }}
       >
         <div className={classes.settingsItems}>
           <SettingItemPaper
@@ -373,9 +396,12 @@ export const PianoPage: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={noteDisplayDegree}
+                      checked={settings.noteDisplayDegree}
                       onChange={(event) => {
-                        setNoteDisplayDegree(event.target.checked)
+                        setSettings((prevSettings) => ({
+                          ...prevSettings,
+                          noteDisplayDegree: !prevSettings.noteDisplayDegree,
+                        }))
                       }}
                       name="checkedA"
                     />
@@ -385,9 +411,12 @@ export const PianoPage: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={noteDisplaySolfege}
+                      checked={settings.noteDisplaySolfege}
                       onChange={(event) => {
-                        setNoteDisplaySolfege(event.target.checked)
+                        setSettings((prevSettings) => ({
+                          ...prevSettings,
+                          noteDisplaySolfege: !prevSettings.noteDisplaySolfege,
+                        }))
                       }}
                       name="checkedA"
                     />
@@ -398,15 +427,18 @@ export const PianoPage: FC = () => {
             }
           />
           <SettingItemPaper
-            title={`Melody length: ${melodyLength}`}
+            title={`Melody length: ${settings.melodyLength}`}
             content={
               <ButtonGroup variant="contained" color="primary">
                 <Button
-                  disabled={melodyLength < 2}
+                  disabled={settings.melodyLength < 2}
                   onClick={() => {
-                    if (melodyLength > 1) {
-                      const mLength = melodyLength - 1
-                      setMelodyLength(mLength)
+                    if (settings.melodyLength > 1) {
+                      const mLength = settings.melodyLength - 1
+                      setSettings((prevSettings) => ({
+                        ...prevSettings,
+                        melodyLength: mLength,
+                      }))
                       setMelody(randomMelody(mLength))
                     }
                   }}
@@ -415,8 +447,11 @@ export const PianoPage: FC = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    const mLength = melodyLength + 1
-                    setMelodyLength(mLength)
+                    const mLength = settings.melodyLength + 1
+                    setSettings((prevSettings) => ({
+                      ...prevSettings,
+                      melodyLength: mLength,
+                    }))
                     setMelody(randomMelody(mLength))
                   }}
                 >
@@ -434,9 +469,12 @@ export const PianoPage: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={keyFixed}
+                      checked={settings.keyFixed}
                       onChange={(event) => {
-                        setKeyFixed(event.target.checked)
+                        setSettings((prevSettings) => ({
+                          ...prevSettings,
+                          keyFixed: !prevSettings.keyFixed,
+                        }))
                       }}
                     />
                   }
@@ -444,27 +482,36 @@ export const PianoPage: FC = () => {
                 />
                 <ButtonGroup variant="contained" color="primary">
                   <Button
-                    disabled={!keyFixed}
+                    disabled={!settings.keyFixed}
                     onClick={() => {
-                      setTranspose(transpose - 1)
+                      setSettings((prevSettings) => ({
+                        ...prevSettings,
+                        transpose: prevSettings.transpose - 1,
+                      }))
                       setMelody(randomMelody())
                     }}
                   >
                     <RemoveIcon />
                   </Button>
                   <Button
-                    disabled={!keyFixed}
+                    disabled={!settings.keyFixed}
                     onClick={() => {
-                      setTranspose(transpose + 1)
+                      setSettings((prevSettings) => ({
+                        ...prevSettings,
+                        transpose: prevSettings.transpose + 1,
+                      }))
                       setMelody(randomMelody())
                     }}
                   >
                     <AddIcon />
                   </Button>
                   <Button
-                    disabled={!keyFixed}
+                    disabled={!settings.keyFixed}
                     onClick={() => {
-                      setTranspose(getRandomInt(0, 11))
+                      setSettings((prevSettings) => ({
+                        ...prevSettings,
+                        transpose: getRandomInt(0, 11),
+                      }))
                     }}
                   >
                     ?
@@ -492,14 +539,17 @@ export const PianoPage: FC = () => {
                     setTempVolume(value as number)
                   }}
                   onChangeCommitted={(event, value) => {
-                    setVolume((value as number) / 10)
+                    setSettings((prevSettings) => ({
+                      ...prevSettings,
+                      volume: value as number,
+                    }))
                   }}
                 />
                 <Typography
                   gutterBottom
-                >{`Note duration: ${noteDuration}s`}</Typography>
+                >{`Note duration: ${settings.noteDuration}s`}</Typography>
                 <Slider
-                  value={noteDuration}
+                  value={settings.noteDuration}
                   valueLabelDisplay="auto"
                   step={0.1}
                   min={0.1}
@@ -509,14 +559,17 @@ export const PianoPage: FC = () => {
                     { value: 4, label: "4s" },
                   ]}
                   onChange={(event, value) => {
-                    setNoteDuration(value as number)
+                    setSettings((prevSettings) => ({
+                      ...prevSettings,
+                      noteDuration: value as number,
+                    }))
                   }}
                 />
                 <Typography
                   gutterBottom
-                >{`Break duration: ${breakDuration}s`}</Typography>
+                >{`Break duration: ${settings.breakDuration}s`}</Typography>
                 <Slider
-                  value={breakDuration}
+                  value={settings.breakDuration}
                   valueLabelDisplay="auto"
                   step={0.1}
                   min={0.1}
@@ -526,7 +579,10 @@ export const PianoPage: FC = () => {
                     { value: 4, label: "4s" },
                   ]}
                   onChange={(event, value) => {
-                    setBreakDuration(value as number)
+                    setSettings((prevSettings) => ({
+                      ...prevSettings,
+                      breakDuration: value as number,
+                    }))
                   }}
                 />
               </Fragment>
@@ -539,9 +595,12 @@ export const PianoPage: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={immediateFeedbackMode}
+                      checked={settings.immediateFeedbackMode}
                       onChange={(event) => {
-                        setImmediateFeedbackMode(event.target.checked)
+                        setSettings((prevSettings) => ({
+                          ...prevSettings,
+                          immediateFeedbackMode: !prevSettings.immediateFeedbackMode,
+                        }))
                       }}
                     />
                   }
@@ -550,9 +609,12 @@ export const PianoPage: FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={adversarialMode}
+                      checked={settings.adversarialMode}
                       onChange={(event) => {
-                        setAdversarialMode(event.target.checked)
+                        setSettings((prevSettings) => ({
+                          ...prevSettings,
+                          adversarialMode: !prevSettings.adversarialMode,
+                        }))
                       }}
                     />
                   }
@@ -579,7 +641,8 @@ export const PianoPage: FC = () => {
         </Typography>
         <Paper className={classes.displayPaper}>
           <Typography variant="h6" align="center" display="inline">
-            {playedNotes.length > 0 && (noteDisplayDegree || noteDisplaySolfege)
+            {playedNotes.length > 0 &&
+            (settings.noteDisplayDegree || settings.noteDisplaySolfege)
               ? playedNotes
                   .map((note) => midinumberToNoteName(note[0]))
                   .join(", ")
@@ -608,12 +671,12 @@ export const PianoPage: FC = () => {
       <div className={classes.pianoContainer}>
         <PianoContainer
           touchInput={touchInput}
-          noteDuration={noteDuration}
-          volume={volume}
+          noteDuration={settings.noteDuration}
+          volume={settings.volume / 10}
           melody={melody}
           play={play}
           setPlay={setPlay}
-          transpose={transpose}
+          transpose={settings.transpose}
           degreeToMidinumber={degreeToMidinumber}
           midinumberToNoteName={midinumberToNoteName}
           appendPlayedNote={appendPlayedNote}
@@ -654,5 +717,7 @@ export const PianoPage: FC = () => {
         }
       />
     </div>
+  ) : (
+    <p>Loading...</p>
   )
 }
