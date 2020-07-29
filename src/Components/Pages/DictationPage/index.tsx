@@ -406,6 +406,7 @@ export const PianoPage: FC = () => {
         setOpen={setOpenSettings}
         setTouchInput={setTouchInput}
         onSave={() => {
+          setMelody(randomMelody())
           dispatch(uploadSettings(settings))
         }}
       >
