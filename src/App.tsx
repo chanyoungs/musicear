@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { useSelector } from 'react-redux'
-import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
+import { HashRouter, Redirect, Route, Switch } from 'react-router-dom'
 
 import { AuthPage } from './Components/Pages/AuthPage'
 import { PianoPage } from './Components/Pages/DictationPage'
@@ -13,7 +13,7 @@ export const App: FC = () => {
   )
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Switch>
         <Route path="/" exact component={() => <Redirect to="/dictation" />} />
         <PrivateRoute
@@ -28,7 +28,8 @@ export const App: FC = () => {
           shouldRedirect={isAuthenticated}
           redirectPath="/"
         />
+        <Route render={() => <Redirect to="/" />} />
       </Switch>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
