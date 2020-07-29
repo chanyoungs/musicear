@@ -403,10 +403,12 @@ export const PianoPage: FC = () => {
       />
       <SettingsDialog
         open={openSettings}
-        setOpen={setOpenSettings}
+        handleClose={() => {
+          setMelody(randomMelody())
+          setOpenSettings(false)
+        }}
         setTouchInput={setTouchInput}
         onSave={() => {
-          setMelody(randomMelody())
           dispatch(uploadSettings(settings))
         }}
       >

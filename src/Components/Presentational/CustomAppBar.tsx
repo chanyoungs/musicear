@@ -50,7 +50,7 @@ export const CustomAppBar: FC<IPCustomAppBar> = ({ onClickSettings }) => {
           <div className={classes.musicearContainer}>
             <img src={Logo} className={classes.logo} alt="" />
             <Typography variant="h6" align="center">
-              Music Ear
+              Music Ear Version 0.1
             </Typography>
           </div>
           <IconButton edge="end" color="inherit" onClick={onClickSettings}>

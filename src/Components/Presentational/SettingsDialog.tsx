@@ -26,7 +26,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export interface IPSettingsDialog {
   open: boolean
-  setOpen: (open: boolean) => void
+  handleClose: () => void
   onSave: () => void
   setTouchInput: (touchInput: boolean) => void
   children: React.ReactNode
@@ -34,16 +34,12 @@ export interface IPSettingsDialog {
 
 export const SettingsDialog: FC<IPSettingsDialog> = ({
   open,
-  setOpen,
+  handleClose,
   onSave,
   setTouchInput,
   children,
 }) => {
   const classes = useStyles()
-
-  const handleClose = () => {
-    setOpen(false)
-  }
 
   return (
     <Dialog open={open} onClose={handleClose}>
