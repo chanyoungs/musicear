@@ -33,7 +33,7 @@ export const defaultSettings: ISettings = {
   noteDisplaySolfege: false,
   melodyLength: 1,
   noteDuration: 1,
-  breakDuration: 1,
+  breakDuration: 2,
   volume: 100,
   transpose: 0,
   keyFixed: true,
