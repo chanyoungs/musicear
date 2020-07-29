@@ -13,6 +13,7 @@ import Person from '@material-ui/icons/Person'
 import { Form, Formik, FormikHelpers } from 'formik'
 import React, { FC, Fragment, useContext } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useFirestore } from 'react-redux-firebase'
 import { Redirect } from 'react-router-dom'
 import { resetPassword, signIn, signUp } from 'src/store/actions/authActions'
 import { AppState } from 'src/store/reducers/rootReducer'
@@ -72,28 +73,60 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 )
 
-const validationSchema = yup.object<Partial<IAuthForm>>({
-  email: yup.string().email("Invalid email").required("Email is required"),
-  password: yup.string().when("page", {
-    is: (page: IAuthForm["page"]) => page === "signIn" || page === "signUp",
-    then: yup
-      .string()
-      .min(6, "Password must be at least 6 characters")
-      .required("Password is required"),
-  }),
-
-  username: yup.string().when("page", {
-    is: "signUp",
-    then: yup.string().required("Username is required"),
-  }),
-})
-
 export const AuthPage: FC = () => {
   const classes = useStyles()
   const dispatch = useDispatch()
   const authError = useSelector<AppState, AppState["auth"]>(
     (state) => state.auth
   )
+
+  const firestore = useFirestore()
+  const validationSchema = yup.object<Partial<IAuthForm>>({
+    email: yup.string().email("Invalid email").required("Email is required"),
+    password: yup.string().when("page", {
+      is: (page: IAuthForm["page"]) => page === "signIn" || page === "signUp",
+      then: yup
+        .string()
+        .min(6, "Password must be at least 6 characters")
+        .required("Password is required"),
+    }),
+    username: yup.string().when("page", {
+      is: "signUp",
+      then: yup
+        .string()
+        .required("Username is required")
+        .test(
+          "checkDuplicate",
+          "This username already exists",
+          (username) =>
+            new Promise<boolean>((resolve, reject) => {
+              firestore
+                .collection("usernames")
+                .where("username", "==", username)
+                .get()
+                .then((querySnapshot) => {
+                  resolve(querySnapshot.empty)
+                })
+                .catch((error) => {
+                  console.error(error)
+                  // resolve(true)
+                })
+            })
+        ),
+      // .test('checkDuplicate', 'This username already exists', (username) => new Promise((resolve, reject) => {
+      //       firestore.collection("usernames").where("username", "==", username).get().then((querySnapshot) =>{
+
+      //       })
+      // .then {
+      //     // exists
+      //     resolve(false)
+      // }).catch(() => {
+      //     // note exists
+      //     resolve(true)
+      // })
+      // }))
+    }),
+  })
 
   const initialValues: IAuthForm = {
     email: "",
@@ -160,7 +193,7 @@ export const AuthPage: FC = () => {
         validationSchema={validationSchema}
         onSubmit={onSubmit}
       >
-        {({ values, errors, isSubmitting, setFieldValue }) => (
+        {({ values, isValid, dirty, isSubmitting, setFieldValue }) => (
           <Form className={classes.root}>
             <img src={Logo} className={classes.logo} alt="GVC Logo" />
             <div className={classes.grid}>
@@ -238,7 +271,7 @@ export const AuthPage: FC = () => {
                           className={classes.signInUpButton}
                           variant="contained"
                           fullWidth
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || !isValid || !dirty}
                           type="submit"
                         >
                           <Typography color="textPrimary">

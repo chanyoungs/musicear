@@ -19,20 +19,21 @@ export const signUp = ({
   setSubmitting(true)
   const firestore = getFirestore()
   const firebase = getFirebase()
-
   firebase
-    .createUser(
-      { email, password },
-      {
-        email,
-        username,
-        settings: {},
-        history: {},
-      }
-    )
+    .createUser({ email, password })
     .then(() => {
-      openAlertSignUp()
-      setSubmitting(false)
+      console.log(firebase.auth().currentUser?.uid)
+      firestore
+        .collection("usernames")
+        .doc(firebase.auth().currentUser?.uid)
+        .set({ username })
+        .then(() => {
+          openAlertSignUp()
+          setSubmitting(false)
+        })
+        .catch((error) => {
+          console.error(error)
+        })
     })
     .catch((error) => {
       dispatch({ type: "SIGN_UP_ERROR", payload: error })
@@ -52,8 +53,6 @@ export const signIn = ({
   getState,
   { getFirestore, getFirebase }
 ) => {
-  console.log("Before")
-  console.log(!!getState().firebase.auth.uid)
   setSubmitting(true)
   console.log("Remember me: ", rememberMe)
 

@@ -19,7 +19,7 @@ import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { isLoaded } from 'react-redux-firebase'
+import { isLoaded, useFirestore, useFirestoreConnect } from 'react-redux-firebase'
 import { uploadHistory, uploadSettings } from 'src/store/actions/uploadActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
@@ -98,22 +98,43 @@ export const PianoPage: FC = () => {
 
   const dispatch = useDispatch()
 
-  const firestoreSettings = useSelector<AppState, ISettings>(
-    (state) => state.firebase.profile.settings
-  )
-  const firestoreHistory = useSelector<AppState, IHistory>(
-    (state) => state.firebase.profile.history
-  )
+  const uid = useSelector<AppState, string>((state) => state.firebase.auth.uid)
+
+  useFirestoreConnect([
+    {
+      collection: "settings",
+      doc: uid || "",
+    },
+  ])
+
+  useFirestoreConnect([
+    {
+      collection: "histories",
+      doc: uid || "",
+    },
+  ])
+
+  const firestoreSettings = useSelector<AppState, ISettings | null>((state) => {
+    const settingsObj = state.firestore.data.settings
+    return settingsObj && uid in settingsObj ? settingsObj[uid] : null
+  })
+
+  const firestoreHistory = useSelector<AppState, IHistory | null>((state) => {
+    const historyObj = state.firestore.data.history
+    return historyObj && uid in historyObj ? historyObj[uid] : null
+  })
 
   const [settings, setSettings] = useState<ISettings>(defaultSettings)
   const [history, setHistory] = useState<IHistory>({})
 
   useEffect(() => {
-    firestoreSettings && setSettings(firestoreSettings)
+    firestoreSettings &&
+      setSettings((prevSettings) => ({ ...prevSettings, ...firestoreSettings }))
   }, [firestoreSettings])
 
   useEffect(() => {
-    firestoreHistory && setHistory(firestoreHistory)
+    firestoreHistory &&
+      setHistory((prevHistory) => ({ ...prevHistory, ...firestoreHistory }))
   }, [firestoreHistory])
 
   const [openSettings, setOpenSettings] = useState(true)

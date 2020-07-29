@@ -13,9 +13,9 @@ export const uploadSettings = (
   const state = getState()
 
   firestore
-    .collection("profiles")
+    .collection("settings")
     .doc(state.firebase.auth.uid)
-    .set({ settings }, { merge: true })
+    .set(settings)
     .catch((error) => console.error(error))
 }
 
@@ -28,8 +28,8 @@ export const uploadHistory = (history: IHistory): ThunkActionCustom<void> => (
   const state = getState()
 
   firestore
-    .collection("profiles")
+    .collection("histories")
     .doc(state.firebase.auth.uid)
-    .set({ history }, { merge: true })
+    .set(history)
     .catch((error) => console.error(error))
 }
