@@ -1,8 +1,5 @@
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import { FC, ReactElement, useEffect, useState } from 'react'
 import Soundfont from 'soundfont-player'
-
-const useStyles = makeStyles((theme: Theme) => createStyles({}))
 
 export interface IPRender {
   isLoading: boolean
@@ -40,7 +37,6 @@ export const SoundfontProvider: FC<IPSoundfontProvider> = ({
   volume,
   render,
 }) => {
-  const classes = useStyles()
   const [activeAudioNodes, setActiveAudioNodes] = useState<ActiveAudioNodes>({})
   const [instrument, setInstrument] = useState<Soundfont.Player | null>(null)
 

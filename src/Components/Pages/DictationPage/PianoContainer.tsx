@@ -1,21 +1,15 @@
 import '../../../react-piano/styles.css'
 
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import useDimensions from 'react-cool-dimensions'
 
-import { KeyboardShortcuts, MidiNumbers, Piano } from '../../../react-piano'
+import { MidiNumbers, Piano } from '../../../react-piano'
 import { LoadingBackdrop } from '../../Presentational/LoadingBackdrop'
 import { SoundfontProvider } from '../../SoundfontProvider'
 import { SoundPlayer } from './SoundPlayer'
 import { Melody, Play } from './types'
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: { height: "100%" },
-  })
-)
-
+// import { KeyboardShortcuts, MidiNumbers, Piano } from '../../../react-piano'
 // webkitAudioContext fallback needed to support Safari
 const audioContext = new (window.AudioContext || window.webkitAudioContext)()
 const soundfontHostname = "https://d1pzp51pvbm36p.cloudfront.net"
@@ -50,7 +44,6 @@ export const PianoContainer: FC<IPPianoContainer> = ({
   midinumberToNoteName,
   appendPlayedNote,
 }) => {
-  const classes = useStyles()
   const { ref, width } = useDimensions<HTMLDivElement>()
 
   const [melodyIndex, setMelodyIndex] = useState(0)

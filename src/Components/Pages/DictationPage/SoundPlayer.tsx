@@ -1,10 +1,7 @@
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import { FC, useEffect, useState } from 'react'
 
 import { IPRender } from '../../SoundfontProvider'
 import { Melody, Play } from './types'
-
-const useStyles = makeStyles((theme: Theme) => createStyles({}))
 
 export type IPSoundPlayer = IPRender & {
   melody: Melody
@@ -21,7 +18,6 @@ export const SoundPlayer: FC<IPSoundPlayer> = ({
   play,
   setPlay,
 }) => {
-  const classes = useStyles()
   const [melodyIndex, setMelodyIndex] = useState(0)
   useEffect(() => {
     let timer: NodeJS.Timeout

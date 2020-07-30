@@ -1,7 +1,7 @@
 import { createMuiTheme } from '@material-ui/core'
 import { CssBaseline } from '@material-ui/core'
 import { MuiThemeProvider } from '@material-ui/core/styles'
-import firebase from 'firebase'
+import firebase from 'firebase/app'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider, useSelector } from 'react-redux'

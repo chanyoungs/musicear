@@ -1,5 +1,4 @@
 import { IResetPassword, ISignIn, ISignUp } from 'src/Components/Pages/AuthPage/types'
-import { defaultSettings } from 'src/Components/Pages/DictationPage/types'
 
 import { auth } from '../../firebase'
 import { ThunkActionCustom } from './types'

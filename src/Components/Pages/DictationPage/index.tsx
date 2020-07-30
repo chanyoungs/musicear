@@ -19,7 +19,7 @@ import SkipNextIcon from '@material-ui/icons/SkipNext'
 import StopIcon from '@material-ui/icons/Stop'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { isLoaded, useFirestore, useFirestoreConnect } from 'react-redux-firebase'
+import { isLoaded, useFirestoreConnect } from 'react-redux-firebase'
 import { uploadHistory, uploadSettings } from 'src/store/actions/uploadActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
@@ -93,7 +93,7 @@ const reference = [
 
 const referenceDuration = 0.5
 
-export const PianoPage: FC = () => {
+export const DictationPage: FC = () => {
   const classes = useStyles()
 
   const dispatch = useDispatch()

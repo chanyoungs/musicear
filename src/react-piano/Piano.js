@@ -1,10 +1,11 @@
-import classNames from 'classnames'
-import difference from 'lodash.difference'
+// import classNames from 'classnames'
+// import difference from 'lodash.difference'
 import PropTypes from 'prop-types'
 import React from 'react'
 
 import ControlledPiano from './ControlledPiano'
-import Keyboard from './Keyboard'
+
+// import Keyboard from './Keyboard'
 
 class Piano extends React.Component {
   static propTypes = {
