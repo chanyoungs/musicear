@@ -89,7 +89,7 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
     {
       name: "Melody Dictation",
       icon: <HearingIcon />,
-      page: "/",
+      page: "/dictation",
       disabled: !isAuthenticated,
     },
   ]
