@@ -70,7 +70,7 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
 
   const username = useSelector<AppState, string>((state) => {
     const usernamesObj = state.firestore.data.usernames
-    return usernamesObj && uid in usernamesObj ? usernamesObj[uid] : ""
+    return usernamesObj && uid in usernamesObj ? usernamesObj[uid].username : ""
   })
 
   const profile = useSelector<AppState, any>((state) => state.firebase.profile)
