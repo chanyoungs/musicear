@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
 import { useSelector } from 'react-redux'
-import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Switch } from 'react-router-dom'
 
 import { AuthPage } from './Components/Pages/AuthPage'
-import { PianoPage } from './Components/Pages/DictationPage'
+import { DictationPage } from './Components/Pages/DictationPage'
 import { PrivateRoute } from './PrivateRoute'
 import { AppState } from './store/reducers/rootReducer'
 
@@ -15,7 +15,7 @@ export const App: FC = () => {
   return (
     <BrowserRouter>
       <Switch>
-        <PrivateRoute path="/" exact component={PianoPage} />
+        <PrivateRoute path="/" exact component={DictationPage} />
         <PrivateRoute
           path="/auth"
           redirectConditionMet={isAuthenticated}

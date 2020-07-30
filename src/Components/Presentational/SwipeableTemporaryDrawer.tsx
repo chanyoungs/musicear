@@ -10,6 +10,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 import HearingIcon from '@material-ui/icons/Hearing'
 import React, { FC, Fragment } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useFirestoreConnect } from 'react-redux-firebase'
 import { useHistory, useLocation } from 'react-router-dom'
 import { signOut } from 'src/store/actions/authActions'
 import { AppState } from 'src/store/reducers/rootReducer'
@@ -57,6 +58,21 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
   const location = useLocation()
   const history = useHistory()
   const dispatch = useDispatch()
+
+  const uid = useSelector<AppState, string>((state) => state.firebase.auth.uid)
+
+  useFirestoreConnect([
+    {
+      collection: "usernames",
+      doc: uid || "",
+    },
+  ])
+
+  const username = useSelector<AppState, string>((state) => {
+    const usernamesObj = state.firestore.data.usernames
+    return usernamesObj && uid in usernamesObj ? usernamesObj[uid] : ""
+  })
+
   const profile = useSelector<AppState, any>((state) => state.firebase.profile)
 
   const isAuthenticated = useSelector<AppState, boolean>(
@@ -65,7 +81,7 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
 
   const items: Item[] = [
     {
-      name: isAuthenticated ? profile.username : "Sign In",
+      name: isAuthenticated ? username : "Sign In",
       icon: <Avatar src={profile.thumbnailUrl} />,
       page: isAuthenticated ? "/" : "/auth",
       divider: "below",

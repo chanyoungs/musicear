@@ -5,6 +5,7 @@ import Toolbar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
 import MenuIcon from '@material-ui/icons/Menu'
 import SettingsIcon from '@material-ui/icons/Settings'
+import preval from 'preval.macro'
 import React, { FC, Fragment, useState } from 'react'
 
 import Logo from './logo192.png'
@@ -35,6 +36,15 @@ export const CustomAppBar: FC<IPCustomAppBar> = ({ onClickSettings }) => {
     setDrawerOpen(open)
   }
 
+  const buildTime = preval`module.exports =
+  "v" +
+  ("0" + (new Date()).getFullYear()).slice(-2) +
+  ("0"+((new Date()).getMonth()+1)).slice(-2) +
+  ("0" + (new Date()).getDate()).slice(-2) +
+  "." +
+  ("0" + (new Date()).getHours()).slice(-2) +
+  ("0" + (new Date()).getMinutes()).slice(-2)`
+
   return (
     <Fragment>
       <AppBar position="static">
@@ -50,7 +60,10 @@ export const CustomAppBar: FC<IPCustomAppBar> = ({ onClickSettings }) => {
           <div className={classes.musicearContainer}>
             <img src={Logo} className={classes.logo} alt="" />
             <Typography variant="h6" align="center">
-              Music Ear 0.2
+              {"Music Ear  "}
+            </Typography>
+            <Typography align="center" variant="caption">
+              {buildTime}
             </Typography>
           </div>
           <IconButton edge="end" color="inherit" onClick={onClickSettings}>

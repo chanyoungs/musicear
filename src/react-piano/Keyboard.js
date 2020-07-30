@@ -1,10 +1,10 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import range from 'just-range';
-import classNames from 'classnames';
+import classNames from 'classnames'
+import range from 'just-range'
+import PropTypes from 'prop-types'
+import React from 'react'
 
-import Key from './Key';
-import MidiNumbers from './MidiNumbers';
+import Key from './Key'
+import MidiNumbers from './MidiNumbers'
 
 class Keyboard extends React.Component {
   static propTypes = {
@@ -20,7 +20,7 @@ class Keyboard extends React.Component {
     useTouchEvents: PropTypes.bool,
     // If width is not provided, must have fixed width and height in parent container
     width: PropTypes.number,
-  };
+  }
 
   static defaultProps = {
     disabled: false,
@@ -28,47 +28,49 @@ class Keyboard extends React.Component {
     useTouchEvents: false,
     keyWidthToHeight: 0.33,
     renderNoteLabel: () => {},
-  };
+  }
 
   // Range of midi numbers on keyboard
   getMidiNumbers() {
-    return range(this.props.noteRange.first, this.props.noteRange.last + 1);
+    return range(this.props.noteRange.first, this.props.noteRange.last + 1)
   }
 
   getNaturalKeyCount() {
     return this.getMidiNumbers().filter((number) => {
-      const { isAccidental } = MidiNumbers.getAttributes(number);
-      return !isAccidental;
-    }).length;
+      const { isAccidental } = MidiNumbers.getAttributes(number)
+      return !isAccidental
+    }).length
   }
 
   // Returns a ratio between 0 and 1
   getNaturalKeyWidth() {
-    return 1 / this.getNaturalKeyCount();
+    return 1 / this.getNaturalKeyCount()
   }
 
   getWidth() {
-    return this.props.width ? this.props.width : '100%';
+    return this.props.width ? this.props.width : "100%"
   }
 
   getHeight() {
     if (!this.props.width) {
-      return '100%';
+      return "100%"
     }
-    const keyWidth = this.props.width * this.getNaturalKeyWidth();
-    return `${keyWidth / this.props.keyWidthToHeight}px`;
+    const keyWidth = this.props.width * this.getNaturalKeyWidth()
+    return `${keyWidth / this.props.keyWidthToHeight}px`
   }
 
   render() {
-    const naturalKeyWidth = this.getNaturalKeyWidth();
+    const naturalKeyWidth = this.getNaturalKeyWidth()
     return (
       <div
-        className={classNames('ReactPiano__Keyboard', this.props.className)}
+        className={classNames("ReactPiano__Keyboard", this.props.className)}
         style={{ width: this.getWidth(), height: this.getHeight() }}
       >
         {this.getMidiNumbers().map((midiNumber) => {
-          const { note, isAccidental } = MidiNumbers.getAttributes(midiNumber);
-          const isActive = !this.props.disabled && this.props.activeNotes.includes(midiNumber);
+          // const { note, isAccidental } = MidiNumbers.getAttributes(midiNumber);
+          const { isAccidental } = MidiNumbers.getAttributes(midiNumber)
+          const isActive =
+            !this.props.disabled && this.props.activeNotes.includes(midiNumber)
           return (
             <Key
               naturalKeyWidth={naturalKeyWidth}
@@ -91,37 +93,37 @@ class Keyboard extends React.Component {
                     midiNumber,
                   })}
             </Key>
-          );
+          )
         })}
       </div>
-    );
+    )
   }
 }
 
 function isNaturalMidiNumber(value) {
-  if (typeof value !== 'number') {
-    return false;
+  if (typeof value !== "number") {
+    return false
   }
-  return MidiNumbers.NATURAL_MIDI_NUMBERS.includes(value);
+  return MidiNumbers.NATURAL_MIDI_NUMBERS.includes(value)
 }
 
 function noteRangePropType(props, propName, componentName) {
-  const { first, last } = props[propName];
+  const { first, last } = props[propName]
   if (!first || !last) {
     return new Error(
-      `Invalid prop ${propName} supplied to ${componentName}. ${propName} must be an object with .first and .last values.`,
-    );
+      `Invalid prop ${propName} supplied to ${componentName}. ${propName} must be an object with .first and .last values.`
+    )
   }
   if (!isNaturalMidiNumber(first) || !isNaturalMidiNumber(last)) {
     return new Error(
-      `Invalid prop ${propName} supplied to ${componentName}. ${propName} values must be valid MIDI numbers, and should not be accidentals (sharp or flat notes).`,
-    );
+      `Invalid prop ${propName} supplied to ${componentName}. ${propName} values must be valid MIDI numbers, and should not be accidentals (sharp or flat notes).`
+    )
   }
   if (first >= last) {
     return new Error(
-      `Invalid prop ${propName} supplied to ${componentName}. ${propName}.first must be smaller than ${propName}.last.`,
-    );
+      `Invalid prop ${propName} supplied to ${componentName}. ${propName}.first must be smaller than ${propName}.last.`
+    )
   }
 }
 
-export default Keyboard;
+export default Keyboard
