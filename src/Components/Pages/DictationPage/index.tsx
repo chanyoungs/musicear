@@ -20,6 +20,7 @@ import StopIcon from '@material-ui/icons/Stop'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { isLoaded, useFirestoreConnect } from 'react-redux-firebase'
+import { ContainerMain } from 'src/Components/Presentational/CustomContainer'
 import { uploadHistory, uploadSettings } from 'src/store/actions/uploadActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
@@ -120,7 +121,7 @@ export const DictationPage: FC = () => {
   })
 
   const firestoreHistory = useSelector<AppState, IHistory | null>((state) => {
-    const historyObj = state.firestore.data.history
+    const historyObj = state.firestore.data.histories
     return historyObj && uid in historyObj ? historyObj[uid] : null
   })
 
@@ -325,17 +326,29 @@ export const DictationPage: FC = () => {
     if (snackbar.open) {
       setHistory((prevHistory) => {
         const historyKey = getHistoryKey()
-        const newHistory = { ...prevHistory }
-        if (!(settings.melodyLength in newHistory)) {
-          newHistory[settings.melodyLength] = {}
+
+        const melodyLengthObject: { [key: string]: [number, number] } =
+          settings.melodyLength in prevHistory
+            ? prevHistory[settings.melodyLength]
+            : {}
+
+        const currentMelodyRecord: [number, number] =
+          historyKey in melodyLengthObject
+            ? melodyLengthObject[historyKey]
+            : [0, 0]
+
+        const newMelodyRecord: [number, number] =
+          snackbar.severity === "success"
+            ? [currentMelodyRecord[0] + 1, currentMelodyRecord[1]]
+            : [currentMelodyRecord[0], currentMelodyRecord[1] + 1]
+
+        const newHistory = {
+          ...prevHistory,
+          [settings.melodyLength]: {
+            ...melodyLengthObject,
+            [historyKey]: newMelodyRecord,
+          },
         }
-        const melodyLengthObject = newHistory[settings.melodyLength]
-        if (!(historyKey in melodyLengthObject)) {
-          melodyLengthObject[historyKey] = [0, 0] // [Corrects, Wrongs]
-        }
-        melodyLengthObject[historyKey][
-          snackbar.severity === "error" ? 1 : 0
-        ] += 1
 
         dispatch(uploadHistory(newHistory))
         return newHistory
@@ -693,18 +706,20 @@ export const DictationPage: FC = () => {
         </Paper>
       </div>
       <div className={classes.pianoContainer}>
-        <PianoContainer
-          touchInput={touchInput}
-          noteDuration={settings.noteDuration}
-          volume={settings.volume / 10}
-          melody={melody}
-          play={play}
-          setPlay={setPlay}
-          transpose={settings.transpose}
-          degreeToMidinumber={degreeToMidinumber}
-          midinumberToNoteName={midinumberToNoteName}
-          appendPlayedNote={appendPlayedNote}
-        />
+        <ContainerMain>
+          <PianoContainer
+            touchInput={touchInput}
+            noteDuration={settings.noteDuration}
+            volume={settings.volume / 10}
+            melody={melody}
+            play={play}
+            setPlay={setPlay}
+            transpose={settings.transpose}
+            degreeToMidinumber={degreeToMidinumber}
+            midinumberToNoteName={midinumberToNoteName}
+            appendPlayedNote={appendPlayedNote}
+          />
+        </ContainerMain>
       </div>
       <CustomBottomNavigation
         bottomNavigationActions={
