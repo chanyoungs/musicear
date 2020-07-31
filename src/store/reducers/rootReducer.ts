@@ -3,9 +3,11 @@ import { combineReducers } from 'redux'
 import { firestoreReducer } from 'redux-firestore'
 
 import { authReducer } from './authReducer'
+import { menuReducer } from './menuReducer'
 
 export const rootReducer = combineReducers({
   auth: authReducer,
+  menu: menuReducer,
   firebase: firebaseReducer,
   firestore: firestoreReducer,
 })

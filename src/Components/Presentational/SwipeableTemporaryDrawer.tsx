@@ -8,14 +8,16 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer'
 import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 import HearingIcon from '@material-ui/icons/Hearing'
-import React, { FC, Fragment } from 'react'
+import React, { FC, Fragment, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useFirestoreConnect } from 'react-redux-firebase'
 import { useHistory, useLocation } from 'react-router-dom'
 import { signOut } from 'src/store/actions/authActions'
+import { setProfileDialogOpen } from 'src/store/actions/menuActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
 import { Paths } from '../Pages/types'
+import { ProfileDialog } from './ProfileDialog'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -48,6 +50,7 @@ type Item = {
   page: Paths
   divider?: "above" | "below"
   disabled?: boolean
+  onClick?: () => void
 }
 
 export const SwipeableTemporaryDrawer: FC<Props> = ({
@@ -69,8 +72,17 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
   ])
 
   const username = useSelector<AppState, string>((state) => {
-    const usernamesObj = state.firestore.data.usernames
-    return usernamesObj && uid in usernamesObj ? usernamesObj[uid].username : ""
+    const firestoreData = state.firestore.data
+    if (firestoreData && "usernames" in firestoreData) {
+      const usernamesObj = state.firestore.data.usernames
+      if (usernamesObj && uid in usernamesObj) {
+        const usernameObj = usernamesObj[uid]
+        if (usernameObj && "username" in usernameObj) {
+          return usernamesObj[uid].username
+        }
+      }
+    }
+    return ""
   })
 
   const profile = useSelector<AppState, any>((state) => state.firebase.profile)
@@ -84,6 +96,9 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
       name: isAuthenticated ? username : "Sign In",
       icon: <Avatar src={profile.thumbnailUrl} />,
       page: isAuthenticated ? "/" : "/auth",
+      onClick: () => {
+        dispatch(setProfileDialogOpen(true))
+      },
       divider: "below",
     },
     {
@@ -111,7 +126,9 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
               {item.divider === "above" && <Divider />}
               <ListItem
                 button
-                onClick={() => history.push(item.page)}
+                onClick={
+                  item.onClick ? item.onClick : () => history.push(item.page)
+                }
                 selected={item.page === location.pathname}
                 disabled={item.disabled}
               >

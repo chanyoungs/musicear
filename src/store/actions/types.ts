@@ -82,5 +82,14 @@ export type AuthActionTypes =
   | UploadPhotoError
   | DeletePhotoError
 
+// Menu Action types
+export const SET_PROFILE_DIALOG_OPEN = "SET_PROFILE_DIALOG_OPEN"
+export interface SetProfileDialogOpen {
+  type: typeof SET_PROFILE_DIALOG_OPEN
+  payload: boolean
+}
+
+export type MenuActionTypes = SetProfileDialogOpen
+
 // All Action types
-export type AppActions = AuthActionTypes
+export type AppActions = AuthActionTypes | MenuActionTypes

@@ -21,6 +21,7 @@ import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { isLoaded, useFirestoreConnect } from 'react-redux-firebase'
 import { ContainerMain } from 'src/Components/Presentational/CustomContainer'
+import { ProfileDialog } from 'src/Components/Presentational/ProfileDialog'
 import { uploadHistory, uploadSettings } from 'src/store/actions/uploadActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
@@ -398,6 +399,7 @@ export const DictationPage: FC = () => {
 
   return isLoaded(settings) && isLoaded(history) ? (
     <div className={classes.root}>
+      <ProfileDialog />
       <CustomSnackbar
         open={snackbar.open}
         autoHideDuration={settings.breakDuration * 1000}

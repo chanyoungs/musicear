@@ -20,19 +20,27 @@ export const signUp = ({
   const firebase = getFirebase()
   firebase
     .createUser({ email, password })
-    .then(() => {
-      console.log(firebase.auth().currentUser?.uid)
+    .then(() =>
       firestore
         .collection("usernames")
         .doc(firebase.auth().currentUser?.uid)
         .set({ username })
-        .then(() => {
-          openAlertSignUp()
-          setSubmitting(false)
-        })
-        .catch((error) => {
-          console.error(error)
-        })
+    )
+    .then(() =>
+      firestore
+        .collection("histories")
+        .doc(firebase.auth().currentUser?.uid)
+        .set({})
+    )
+    .then(() =>
+      firestore
+        .collection("settings")
+        .doc(firebase.auth().currentUser?.uid)
+        .set({})
+    )
+    .then(() => {
+      openAlertSignUp()
+      setSubmitting(false)
     })
     .catch((error) => {
       dispatch({ type: "SIGN_UP_ERROR", payload: error })
@@ -120,4 +128,36 @@ export const signOut = (): ThunkActionCustom<void> => (
     dispatch({ type: "SIGN_OUT_ERROR", payload: error })
     console.log(error)
   })
+}
+
+export const deleteAccount = (): ThunkActionCustom<void> => (
+  dispatch,
+  getState,
+  { getFirestore, getFirebase }
+) => {
+  const firestore = getFirestore()
+  const firebase = getFirebase()
+
+  const currentUser = firebase.auth().currentUser
+
+  if (currentUser) {
+    firestore
+      .collection("usernames")
+      .doc(currentUser.uid)
+      .delete()
+      .then(() =>
+        firestore.collection("histories").doc(currentUser.uid).delete()
+      )
+      .then(() =>
+        firestore.collection("settings").doc(currentUser.uid).delete()
+      )
+      .then(() =>
+        firestore.collection("profiles").doc(currentUser.uid).delete()
+      )
+      .then(() => currentUser.delete())
+      .then(() => firebase.logout())
+      .catch((error) => {
+        console.error(error)
+      })
+  }
 }
