@@ -131,7 +131,7 @@ export const deleteAccount = (): ThunkActionCustom<void> => async (
   if (currentUser) {
     try {
       await Promise.all(
-        ["usernames", "histories", "profiles"].map((collection) =>
+        ["usernames", "histories", "profiles", "settings"].map((collection) =>
           firestore.collection(collection).doc(currentUser.uid).delete()
         )
       )

@@ -11,9 +11,9 @@ import Email from '@material-ui/icons/Email'
 import Lock from '@material-ui/icons/Lock'
 import Person from '@material-ui/icons/Person'
 import { Form, Formik, FormikHelpers } from 'formik'
-import React, { FC, Fragment } from 'react'
+import React, { FC, Fragment, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useFirestore } from 'react-redux-firebase'
+import { isLoaded, useFirestore } from 'react-redux-firebase'
 import { resetPassword, signIn, signUp } from 'src/store/actions/authActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 import * as yup from 'yup'
@@ -75,6 +75,13 @@ const useStyles = makeStyles((theme: Theme) =>
 export const AuthPage: FC = () => {
   const classes = useStyles()
   const dispatch = useDispatch()
+
+  // Define 'isMounted' flag using ref
+  const isMounted = useRef(true)
+  useEffect(() => () => {
+    isMounted.current = false
+  })
+
   const authError = useSelector<AppState, AppState["auth"]>(
     (state) => state.auth
   )
@@ -98,32 +105,19 @@ export const AuthPage: FC = () => {
           "checkDuplicate",
           "This username already exists",
           (username) =>
-            new Promise<boolean>((resolve, reject) => {
-              firestore
-                .collection("usernames")
-                .where("username", "==", username)
-                .get()
-                .then((querySnapshot) => {
-                  resolve(querySnapshot.empty)
-                })
-                .catch((error) => {
-                  console.error(error)
-                  // resolve(true)
-                })
+            new Promise<boolean>(async (resolve, reject) => {
+              try {
+                const querySnapshot = await firestore
+                  .collection("usernames")
+                  .where("username", "==", username || "")
+                  .get()
+                resolve(querySnapshot.empty)
+              } catch (error) {
+                console.error(error)
+                reject(error)
+              }
             })
         ),
-      // .test('checkDuplicate', 'This username already exists', (username) => new Promise((resolve, reject) => {
-      //       firestore.collection("usernames").where("username", "==", username).get().then((querySnapshot) =>{
-
-      //       })
-      // .then {
-      //     // exists
-      //     resolve(false)
-      // }).catch(() => {
-      //     // note exists
-      //     resolve(true)
-      // })
-      // }))
     }),
   })
 
@@ -143,10 +137,18 @@ export const AuthPage: FC = () => {
   ) => {
     const { email, password, username, rememberMe, page } = values
 
-    const openAlertResetPassword = () =>
-      setFieldValue("alertResetPassword", true)
+    const setSubmittingIfMounted: typeof setSubmitting = (...props) => {
+      isMounted.current && setSubmitting(...props)
+    }
 
-    const openAlertSignUp = () => setFieldValue("alertSignUp", true)
+    const setFieldValueIfMounted: typeof setFieldValue = (...props) => {
+      isMounted.current && setFieldValue(...props)
+    }
+
+    const openAlertResetPassword = () =>
+      setFieldValueIfMounted("alertResetPassword", true)
+
+    const openAlertSignUp = () => setFieldValueIfMounted("alertSignUp", true)
 
     switch (page) {
       case "signIn":
@@ -155,7 +157,7 @@ export const AuthPage: FC = () => {
             email,
             password,
             rememberMe,
-            setSubmitting,
+            setSubmitting: setSubmittingIfMounted,
           })
         )
         break
@@ -166,7 +168,7 @@ export const AuthPage: FC = () => {
             email,
             password,
             username,
-            setSubmitting,
+            setSubmitting: setSubmittingIfMounted,
             openAlert: openAlertSignUp,
           })
         )
@@ -176,7 +178,7 @@ export const AuthPage: FC = () => {
         dispatch(
           resetPassword({
             email,
-            setSubmitting,
+            setSubmitting: setSubmittingIfMounted,
             openAlert: openAlertResetPassword,
           })
         )
