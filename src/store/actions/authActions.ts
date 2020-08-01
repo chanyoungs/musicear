@@ -10,7 +10,7 @@ export const signUp = ({
   username,
   setSubmitting,
   openAlert: openAlertSignUp,
-}: ISignUp): ThunkActionCustom<void> => (
+}: ISignUp): ThunkActionCustom<void> => async (
   dispatch,
   getState,
   { getFirestore, getFirebase }
@@ -18,35 +18,27 @@ export const signUp = ({
   setSubmitting(true)
   const firestore = getFirestore()
   const firebase = getFirebase()
-  firebase
-    .createUser({ email, password })
-    .then(() =>
-      firestore
-        .collection("usernames")
-        .doc(firebase.auth().currentUser?.uid)
-        .set({ username })
-    )
-    .then(() =>
-      firestore
-        .collection("histories")
-        .doc(firebase.auth().currentUser?.uid)
-        .set({})
-    )
-    .then(() =>
-      firestore
-        .collection("settings")
-        .doc(firebase.auth().currentUser?.uid)
-        .set({})
-    )
-    .then(() => {
-      openAlertSignUp()
-      setSubmitting(false)
-    })
-    .catch((error) => {
-      dispatch({ type: "SIGN_UP_ERROR", payload: error })
-      console.log(error)
-      setSubmitting(false)
-    })
+
+  try {
+    await firebase.createUser({ email, password })
+    await firestore
+      .collection("usernames")
+      .doc(firebase.auth().currentUser?.uid)
+      .set({ username })
+    await firestore
+      .collection("histories")
+      .doc(firebase.auth().currentUser?.uid)
+      .set({})
+    await firestore
+      .collection("settings")
+      .doc(firebase.auth().currentUser?.uid)
+      .set({})
+    openAlertSignUp()
+  } catch (error) {
+    dispatch({ type: "SIGN_UP_ERROR", payload: error })
+    console.log(error)
+  }
+  setSubmitting(false)
 }
 
 // Sign In Member
@@ -55,7 +47,7 @@ export const signIn = ({
   password,
   rememberMe,
   setSubmitting,
-}: ISignIn): ThunkActionCustom<void> => (
+}: ISignIn): ThunkActionCustom<void> => async (
   dispatch,
   getState,
   { getFirestore, getFirebase }
@@ -65,29 +57,27 @@ export const signIn = ({
 
   const firebase = getFirebase()
 
-  firebase
-    .auth()
-    .setPersistence(
-      rememberMe ? auth.Auth.Persistence.LOCAL : auth.Auth.Persistence.SESSION // There are some type definition missing on ExtendedFirebaseInstance and so used original auth function from firebase
-    )
-    .then(() => {
-      firebase
-        .login({ email, password })
-        .then((userCredentials) => {
-          console.log("Sign in succesful!")
-        })
-        .catch((error) => {
-          dispatch({ type: "SIGN_IN_ERROR", payload: error })
-          console.log(error)
-          setSubmitting(false)
-          console.log("autherror", getState().firebase.authError)
-        })
-    })
-    .catch((error) => {
-      dispatch({ type: "REMEMBER_ME_ERROR", payload: error })
+  try {
+    // There are some type definition missing on ExtendedFirebaseInstance and so used original auth function from firebase
+    await firebase
+      .auth()
+      .setPersistence(
+        rememberMe ? auth.Auth.Persistence.LOCAL : auth.Auth.Persistence.SESSION
+      )
+    try {
+      await firebase.login({ email, password })
+      console.log("Sign in succesful!")
+    } catch (error) {
+      dispatch({ type: "SIGN_IN_ERROR", payload: error })
       console.log(error)
       setSubmitting(false)
-    })
+      console.log("autherror", getState().firebase.authError)
+    }
+  } catch (error) {
+    dispatch({ type: "REMEMBER_ME_ERROR", payload: error })
+    console.log(error)
+    setSubmitting(false)
+  }
 }
 
 // Send reset password link
@@ -95,25 +85,23 @@ export const resetPassword = ({
   email,
   setSubmitting,
   openAlert: openAlertResetPassword,
-}: IResetPassword): ThunkActionCustom<void> => (
+}: IResetPassword): ThunkActionCustom<void> => async (
   dispatch,
   getState,
   { getFirestore, getFirebase }
 ) => {
   setSubmitting(true)
   const firebase = getFirebase()
-  firebase
-    .resetPassword(email)
-    .then(() => {
-      console.log("Password reset link sent!")
-      openAlertResetPassword()
-      setSubmitting(false)
-    })
-    .catch((error) => {
-      console.log("Password reset link sending error!")
-      dispatch({ type: "RESET_PASSWORD_ERROR", payload: error })
-      setSubmitting(false)
-    })
+
+  try {
+    await firebase.resetPassword(email)
+    console.log("Password reset link sent!")
+    openAlertResetPassword()
+  } catch (error) {
+    console.log("Password reset link sending error!")
+    dispatch({ type: "RESET_PASSWORD_ERROR", payload: error })
+  }
+  setSubmitting(false)
 }
 
 // Sign Out Member
@@ -130,7 +118,7 @@ export const signOut = (): ThunkActionCustom<void> => (
   })
 }
 
-export const deleteAccount = (): ThunkActionCustom<void> => (
+export const deleteAccount = (): ThunkActionCustom<void> => async (
   dispatch,
   getState,
   { getFirestore, getFirebase }
@@ -141,23 +129,16 @@ export const deleteAccount = (): ThunkActionCustom<void> => (
   const currentUser = firebase.auth().currentUser
 
   if (currentUser) {
-    firestore
-      .collection("usernames")
-      .doc(currentUser.uid)
-      .delete()
-      .then(() =>
-        firestore.collection("histories").doc(currentUser.uid).delete()
+    try {
+      await Promise.all(
+        ["usernames", "histories", "profiles"].map((collection) =>
+          firestore.collection(collection).doc(currentUser.uid).delete()
+        )
       )
-      .then(() =>
-        firestore.collection("settings").doc(currentUser.uid).delete()
-      )
-      .then(() =>
-        firestore.collection("profiles").doc(currentUser.uid).delete()
-      )
-      .then(() => currentUser.delete())
-      .then(() => firebase.logout())
-      .catch((error) => {
-        console.error(error)
-      })
+      await currentUser.delete()
+      await firebase.logout()
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
