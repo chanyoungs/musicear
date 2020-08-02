@@ -1,4 +1,5 @@
 import { IResetPassword, ISignIn, ISignUp } from 'src/Components/Pages/AuthPage/types'
+import { setProfileDialogOpen } from 'src/store/actions/menuActions'
 
 import { auth } from '../../firebase'
 import { ThunkActionCustom } from './types'
@@ -16,28 +17,17 @@ export const signUp = ({
   { getFirestore, getFirebase }
 ) => {
   setSubmitting(true)
-  const firestore = getFirestore()
+
   const firebase = getFirebase()
 
   try {
-    await firebase.createUser({ email, password })
-    await firestore
-      .collection("usernames")
-      .doc(firebase.auth().currentUser?.uid)
-      .set({ username })
-    await firestore
-      .collection("histories")
-      .doc(firebase.auth().currentUser?.uid)
-      .set({})
-    await firestore
-      .collection("settings")
-      .doc(firebase.auth().currentUser?.uid)
-      .set({})
+    await firebase.createUser({ email, password }, { email, username })
     openAlertSignUp()
   } catch (error) {
     dispatch({ type: "SIGN_UP_ERROR", payload: error })
     console.log(error)
   }
+
   setSubmitting(false)
 }
 
@@ -70,14 +60,14 @@ export const signIn = ({
     } catch (error) {
       dispatch({ type: "SIGN_IN_ERROR", payload: error })
       console.log(error)
-      setSubmitting(false)
       console.log("autherror", getState().firebase.authError)
     }
   } catch (error) {
     dispatch({ type: "REMEMBER_ME_ERROR", payload: error })
     console.log(error)
-    setSubmitting(false)
   }
+
+  setSubmitting(false)
 }
 
 // Send reset password link
@@ -91,6 +81,7 @@ export const resetPassword = ({
   { getFirestore, getFirebase }
 ) => {
   setSubmitting(true)
+
   const firebase = getFirebase()
 
   try {
@@ -101,6 +92,7 @@ export const resetPassword = ({
     console.log("Password reset link sending error!")
     dispatch({ type: "RESET_PASSWORD_ERROR", payload: error })
   }
+
   setSubmitting(false)
 }
 
@@ -111,7 +103,6 @@ export const signOut = (): ThunkActionCustom<void> => (
   { getFirestore, getFirebase }
 ) => {
   const firebase = getFirebase()
-
   firebase.logout().catch((error) => {
     dispatch({ type: "SIGN_OUT_ERROR", payload: error })
     console.log(error)
@@ -123,20 +114,15 @@ export const deleteAccount = (): ThunkActionCustom<void> => async (
   getState,
   { getFirestore, getFirebase }
 ) => {
-  const firestore = getFirestore()
   const firebase = getFirebase()
 
   const currentUser = firebase.auth().currentUser
 
   if (currentUser) {
     try {
-      await Promise.all(
-        ["usernames", "histories", "profiles", "settings"].map((collection) =>
-          firestore.collection(collection).doc(currentUser.uid).delete()
-        )
-      )
       await currentUser.delete()
       await firebase.logout()
+      dispatch(setProfileDialogOpen(false))
     } catch (error) {
       console.error(error)
     }

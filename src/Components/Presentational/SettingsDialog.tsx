@@ -1,6 +1,7 @@
 import Button from '@material-ui/core/Button'
 import Dialog from '@material-ui/core/Dialog'
 import DialogActions from '@material-ui/core/DialogActions'
+import DialogContent from '@material-ui/core/DialogContent'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import IconButton from '@material-ui/core/IconButton'
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
@@ -14,7 +15,6 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: 0,
       padding: theme.spacing(2),
     },
-    children: { padding: theme.spacing(2) },
     closeButton: {
       position: "absolute",
       right: theme.spacing(1),
@@ -53,8 +53,7 @@ export const SettingsDialog: FC<IPSettingsDialog> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-
-      <div className={classes.children}>{children}</div>
+      <DialogContent>{children}</DialogContent>
       <DialogActions>
         <Button
           autoFocus

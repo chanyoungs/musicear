@@ -8,16 +8,15 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer'
 import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 import HearingIcon from '@material-ui/icons/Hearing'
-import React, { FC, Fragment, useState } from 'react'
+import React, { FC, Fragment } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useFirestoreConnect } from 'react-redux-firebase'
+import { FirebaseReducer } from 'react-redux-firebase'
 import { useHistory, useLocation } from 'react-router-dom'
 import { signOut } from 'src/store/actions/authActions'
 import { setProfileDialogOpen } from 'src/store/actions/menuActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 
 import { Paths } from '../Pages/types'
-import { ProfileDialog } from './ProfileDialog'
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -53,6 +52,10 @@ type Item = {
   onClick?: () => void
 }
 
+type ProfileType = FirebaseReducer.Profile<
+  Record<"username" | "thumbnailUrl", string | undefined>
+>
+
 export const SwipeableTemporaryDrawer: FC<Props> = ({
   drawerOpen,
   toggleDrawer,
@@ -62,38 +65,16 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
   const history = useHistory()
   const dispatch = useDispatch()
 
-  const uid = useSelector<AppState, string>((state) => state.firebase.auth.uid)
-
-  useFirestoreConnect([
-    {
-      collection: "usernames",
-      doc: uid || "",
-    },
-  ])
-
-  const username = useSelector<AppState, string>((state) => {
-    const firestoreData = state.firestore.data
-    if (firestoreData && "usernames" in firestoreData) {
-      const usernamesObj = state.firestore.data.usernames
-      if (usernamesObj && uid in usernamesObj) {
-        const usernameObj = usernamesObj[uid]
-        if (usernameObj && "username" in usernameObj) {
-          return usernamesObj[uid].username
-        }
-      }
-    }
-    return ""
-  })
-
-  const profile = useSelector<AppState, any>((state) => state.firebase.profile)
-
+  const profile = useSelector<AppState, ProfileType>(
+    (state) => state.firebase.profile as ProfileType
+  )
   const isAuthenticated = useSelector<AppState, boolean>(
     (state) => !state.firebase.auth.isEmpty
   )
 
   const items: Item[] = [
     {
-      name: isAuthenticated ? username : "Sign In",
+      name: isAuthenticated ? profile.username || "" : "Sign In",
       icon: <Avatar src={profile.thumbnailUrl} />,
       page: isAuthenticated ? "/" : "/auth",
       onClick: () => {

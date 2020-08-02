@@ -13,7 +13,7 @@ import Person from '@material-ui/icons/Person'
 import { Form, Formik, FormikHelpers } from 'formik'
 import React, { FC, Fragment, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { isLoaded, useFirestore } from 'react-redux-firebase'
+import { functions } from 'src/firebase'
 import { resetPassword, signIn, signUp } from 'src/store/actions/authActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 import * as yup from 'yup'
@@ -86,7 +86,18 @@ export const AuthPage: FC = () => {
     (state) => state.auth
   )
 
-  const firestore = useFirestore()
+  const checkUsernameAvailable = (username: string) =>
+    new Promise<boolean>(async (resolve, reject) => {
+      try {
+        const result = await functions.httpsCallable("checkUsernameAvailable")({
+          username,
+        })
+        const usernameAvailable: boolean = result.data.usernameAvailable
+        resolve(usernameAvailable)
+      } catch (error) {
+        reject(error)
+      }
+    })
   const validationSchema = yup.object<Partial<IAuthForm>>({
     email: yup.string().email("Invalid email").required("Email is required"),
     password: yup.string().when("page", {
@@ -98,26 +109,24 @@ export const AuthPage: FC = () => {
     }),
     username: yup.string().when("page", {
       is: "signUp",
-      then: yup
-        .string()
-        .required("Username is required")
-        .test(
-          "checkDuplicate",
-          "This username already exists",
-          (username) =>
-            new Promise<boolean>(async (resolve, reject) => {
-              try {
-                const querySnapshot = await firestore
-                  .collection("usernames")
-                  .where("username", "==", username || "")
-                  .get()
-                resolve(querySnapshot.empty)
-              } catch (error) {
-                console.error(error)
-                reject(error)
-              }
-            })
-        ),
+      then: yup.string().required("Username is required").test(
+        "checkUsernameAvailable",
+        "This username already exists",
+        checkUsernameAvailable
+        // username =>
+        // new Promise<boolean>(async (resolve, reject) => {
+        //   try {
+        //     const querySnapshot = await firestore
+        //       .collection("usernames")
+        //       .where("username", "==", username || "")
+        //       .get()
+        //     resolve(querySnapshot.empty)
+        //   } catch (error) {
+        //     console.error(error)
+        //     reject(error)
+        //   }
+        // })
+      ),
     }),
   })
 
