@@ -13,7 +13,6 @@ import Person from '@material-ui/icons/Person'
 import { Form, Formik, FormikHelpers } from 'formik'
 import React, { FC, Fragment, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { functions } from 'src/firebase'
 import { resetPassword, signIn, signUp } from 'src/store/actions/authActions'
 import { AppState } from 'src/store/reducers/rootReducer'
 import * as yup from 'yup'
@@ -86,18 +85,6 @@ export const AuthPage: FC = () => {
     (state) => state.auth
   )
 
-  const checkUsernameAvailable = (username: string) =>
-    new Promise<boolean>(async (resolve, reject) => {
-      try {
-        const result = await functions.httpsCallable("checkUsernameAvailable")({
-          username,
-        })
-        const usernameAvailable: boolean = result.data.usernameAvailable
-        resolve(usernameAvailable)
-      } catch (error) {
-        reject(error)
-      }
-    })
   const validationSchema = yup.object<Partial<IAuthForm>>({
     email: yup.string().email("Invalid email").required("Email is required"),
     password: yup.string().when("page", {
@@ -107,33 +94,11 @@ export const AuthPage: FC = () => {
         .min(6, "Password must be at least 6 characters")
         .required("Password is required"),
     }),
-    username: yup.string().when("page", {
-      is: "signUp",
-      then: yup.string().required("Username is required").test(
-        "checkUsernameAvailable",
-        "This username already exists",
-        checkUsernameAvailable
-        // username =>
-        // new Promise<boolean>(async (resolve, reject) => {
-        //   try {
-        //     const querySnapshot = await firestore
-        //       .collection("usernames")
-        //       .where("username", "==", username || "")
-        //       .get()
-        //     resolve(querySnapshot.empty)
-        //   } catch (error) {
-        //     console.error(error)
-        //     reject(error)
-        //   }
-        // })
-      ),
-    }),
   })
 
   const initialValues: IAuthForm = {
     email: "",
     password: "",
-    username: "",
     rememberMe: false,
     page: "signIn",
     alertResetPassword: false,
@@ -144,7 +109,7 @@ export const AuthPage: FC = () => {
     values: IAuthForm,
     { setSubmitting, setFieldValue }: FormikHelpers<IAuthForm>
   ) => {
-    const { email, password, username, rememberMe, page } = values
+    const { email, password, rememberMe, page } = values
 
     const setSubmittingIfMounted: typeof setSubmitting = (...props) => {
       isMounted.current && setSubmitting(...props)
@@ -176,7 +141,6 @@ export const AuthPage: FC = () => {
           signUp({
             email,
             password,
-            username,
             setSubmitting: setSubmittingIfMounted,
             openAlert: openAlertSignUp,
           })
@@ -234,17 +198,6 @@ export const AuthPage: FC = () => {
                       />
                     )}
                   </Grid>
-
-                  {values.page === "signUp" && (
-                    <Grid item xs={12}>
-                      <FormikTextField
-                        label="Username"
-                        placeholder="username123"
-                        name="username"
-                        icon={<Person />}
-                      />
-                    </Grid>
-                  )}
                   <Grid item xs>
                     {values.page === "signIn" && (
                       <FormikCheckBox name="rememberMe" label="Remember me" />

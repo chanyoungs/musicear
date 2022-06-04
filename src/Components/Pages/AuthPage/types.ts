@@ -3,7 +3,6 @@
 export type AuthTypes = {
   email: string
   password: string
-  username: string
   photoUrl: string
   rememberMe: boolean
   page: "signIn" | "signUp" | "resetPassword"
@@ -24,13 +23,12 @@ export type ISignIn = Pick<
 >
 export type ISignUp = Pick<
   AuthTypes,
-  "email" | "password" | "username" | "setSubmitting" | "openAlert"
+  "email" | "password" | "setSubmitting" | "openAlert"
 >
 export type IAuthForm = Pick<
   AuthTypes,
   | "email"
   | "password"
-  | "username"
   | "rememberMe"
   | "page"
   | "alertResetPassword"

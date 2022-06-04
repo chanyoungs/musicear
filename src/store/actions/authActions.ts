@@ -8,7 +8,6 @@ import { ThunkActionCustom } from './types'
 export const signUp = ({
   email,
   password,
-  username,
   setSubmitting,
   openAlert: openAlertSignUp,
 }: ISignUp): ThunkActionCustom<void> => async (
@@ -21,7 +20,7 @@ export const signUp = ({
   const firebase = getFirebase()
 
   try {
-    await firebase.createUser({ email, password }, { email, username })
+    await firebase.createUser({ email, password }, { email })
     openAlertSignUp()
   } catch (error) {
     dispatch({ type: "SIGN_UP_ERROR", payload: error })

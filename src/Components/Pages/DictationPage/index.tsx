@@ -230,7 +230,6 @@ export const DictationPage: FC = () => {
 
   const [melody, setMelody] = useState<Melody>(() => randomMelody())
 
-  // Bottom Navigational onClick functions
   const playMelody = () => setPlay("sound")
   const stopMelody = () => setPlay("stop")
   const playNextMelody = () => {

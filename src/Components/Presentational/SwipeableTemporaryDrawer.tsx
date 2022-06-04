@@ -53,7 +53,7 @@ type Item = {
 }
 
 type ProfileType = FirebaseReducer.Profile<
-  Record<"username" | "thumbnailUrl", string | undefined>
+  Record<"thumbnailUrl", string | undefined>
 >
 
 export const SwipeableTemporaryDrawer: FC<Props> = ({
@@ -74,7 +74,7 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
 
   const items: Item[] = [
     {
-      name: isAuthenticated ? profile.username || "" : "Sign In",
+      name: isAuthenticated ? "" : "Sign In",
       icon: <Avatar src={profile.thumbnailUrl} />,
       page: isAuthenticated ? "/" : "/auth",
       onClick: () => {
