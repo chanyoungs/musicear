@@ -47,8 +47,8 @@ const useStyles = makeStyles((theme: Theme) =>
       background: theme.palette.primary.light,
     },
     logo: {
-      width: "10%",
-      margin: theme.spacing(2),
+      width: theme.spacing(25),
+      height: theme.spacing(25),
     },
     footer: {
       bottom: 0,
@@ -168,6 +168,7 @@ export const AuthPage: FC = () => {
         {({ values, isValid, dirty, isSubmitting, setFieldValue }) => (
           <Form className={classes.root}>
             <img src={Logo} className={classes.logo} alt="GVC Logo" />
+            {/* <Avatar src={Logo} className={classes.logo} alt="GVC Logo" /> */}
             <div className={classes.grid}>
               <ContainerMain>
                 <Grid
