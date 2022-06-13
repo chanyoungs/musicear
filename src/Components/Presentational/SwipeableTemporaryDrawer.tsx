@@ -74,7 +74,7 @@ export const SwipeableTemporaryDrawer: FC<Props> = ({
 
   const items: Item[] = [
     {
-      name: isAuthenticated ? "" : "Sign In",
+      name: isAuthenticated ? "Account" : "Sign In",
       icon: <Avatar src={profile.thumbnailUrl} />,
       page: isAuthenticated ? "/" : "/auth",
       onClick: () => {

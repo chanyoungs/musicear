@@ -22,7 +22,7 @@ import { ChangeSignInUpButton } from '../../Presentational/ChangeSignInUpButton'
 import { ContainerMain } from '../../Presentational/CustomContainer'
 import { FormikCheckBox } from '../../Presentational/FormikCheckbox'
 import { FormikTextField } from '../../Presentational/FormikTextField'
-import Logo from '../../Presentational/logo192.png'
+import Logo from '../../Presentational/logo512.png'
 import { IAuthForm } from './types'
 
 // import { Redirect, useHistory, useLocation } from 'react-router-dom'
@@ -47,10 +47,8 @@ const useStyles = makeStyles((theme: Theme) =>
       background: theme.palette.primary.light,
     },
     logo: {
-      width: theme.spacing(10),
-      flex: 1,
-      marginTop: theme.spacing(10),
-      marginBottom: theme.spacing(5),
+      width: "10%",
+      margin: theme.spacing(2),
     },
     footer: {
       bottom: 0,

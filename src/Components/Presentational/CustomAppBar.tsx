@@ -8,7 +8,7 @@ import SettingsIcon from '@material-ui/icons/Settings'
 import preval from 'preval.macro'
 import React, { FC, Fragment, useState } from 'react'
 
-import Logo from './logo192.png'
+import Logo from './logo512.png'
 import { SwipeableTemporaryDrawer } from './SwipeableTemporaryDrawer'
 
 const useStyles = makeStyles((theme: Theme) =>
