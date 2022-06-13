@@ -1,14 +1,15 @@
 language: node_js
 node_js:
-  - "14.18"
+- "14.18"
 cache: npm
-
 install:
-  - npm install
-  - npm install -g firebase-tools
+- npm install
+- npm install -g firebase-tools
 
 script:
-  - CI=false npm run build
+- CI=false npm run build
 
-after_success:
-  - firebase deploy --token $FIREBASE_TOKEN
+deploy:
+  provider: firebase
+  token:
+    secure: "MRAz81MQgAe86MPGrqL9vzGDMnSv/+wQpIl3pnGWAYJEHq1AZ0NCoO6aPcWSZjr8zPiuxylfrR06ieuR+XPG0P5MzaQtwZPhnyzwO2S9zq5mzSmww0mO8iXGBIPKZmiD/0CYSdJbxIN2XhHtYnAAowKQ2Kgso9TrHwd8Dinh0BPVnsuxV4J63BOMkGt/bSKtIVgWozRchPw/A57iUoeSbfCUlQC2cpMjKSTbyzO5bG4JALPOIriO3z2V5j58IGtE77UJ99oZACEjGP9aP0kvbYZ3c2QWH0yPgh0WpCbp3phlNSQka2N6B+ZawKuNYOOl6xaetrHcrOG4w8wX234zTZvDu0TOJDgRa+djTyPj7C/jIVWKfc8EwUzX1h0LSsevsOA0bYH4XjGoLb5gEOZLUlQHvaCTkrYlLsLOqGtP+jbnqODarAjF3BuCr1+BiNQPTv626j3GzNQ3oxeYbiADw+a7aXHSJTeDQ7OTauYRDDG4DUA39SuDyA3WEQ4D/nhdgFrqdLAYrWcmM1bfLFGbSYQsEv4wwj6bYnxNuyl+NVbS9zgGA4BPrJvTwbt4iAcimj0R3NSBIJnpWljxejr1cN26lXsmo01xzhT55kYNT3zrxrYfJJb2SfVe774AamV9rf4dphspRE3qCNmP1RwoGFCyutwbolbr9mVsWZtR5B0="
